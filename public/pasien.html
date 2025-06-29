@@ -1,0 +1,1905 @@
+<!-- /**
+ * @license
+ * APLIKASI REKAM MEDIS BERBASIS BLOCKCHAIN dengan ALGORITMA KONSENSUS PROOF-of-WORK
+ * Copyright (c) 2025 Muhammad As'ad Muhibbin Akbar
+ * Licensed under the MIT License.
+ * See LICENSE file for details.
+ * See LICENSE file for details.
+ */ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Patient Access System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#3f51b5">
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-dark: #303f9f;
+            --primary-light: #e8eaf6;
+            --secondary: #f8f9fa;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-color: #e0e6ed;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --sidebar-width: 280px;
+            --bottom-nav-height: 56px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: var(--bottom-nav-height);
+        }
+        
+        /* Sidebar Styles - Hidden on mobile by default */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            transform: translateX(-100%);
+        }
+        
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+        
+        .sidebar-header h3 {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .menu-item:hover, .menu-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .menu-item i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Navbar Styles */
+        .navbar {
+            background: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        
+        .navbar-toggler {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-menu .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            color: var(--text-dark);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .user-menu .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* Bottom Navigation - Mobile Only */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 999;
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            padding: 8px;
+            flex: 1;
+        }
+        
+        .bottom-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 3px;
+        }
+        
+        .bottom-nav-item.active {
+            color: var(--primary);
+        }
+        
+        /* Content Styles */
+        .content {
+            padding: 15px;
+            flex: 1;
+        }
+        
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+            font-size: 1.4rem;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header .card-title {
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .btn i {
+            margin-right: 6px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Token Section */
+        .token-display {
+            display: none;
+        }
+        
+        .qr-code-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            /* background: #f0f0f0;  Remove background to allow canvas to be visible */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        /* Profile Section */
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .profile-info h3 {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .profile-info p {
+            color: var(--text-light);
+            margin-bottom: 0;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+            display: block;
+            font-size: 0.9rem;
+        }
+        
+        .form-control {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(63, 81, 181, 0.2);
+            outline: none;
+        }
+        
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 15px;
+            left: 15px;
+            z-index: 9999;
+            max-width: 100%;
+        }
+        
+        .toast {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            border: none;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        .toast-header {
+            font-weight: 600;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+        }
+        
+        .toast-success .toast-header {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+        
+        .toast-error .toast-header {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--danger);
+        }
+        
+        .toast-body {
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+        
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        
+        .table th {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            font-weight: 600;
+            padding: 10px 12px;
+            text-align: left;
+        }
+        
+        .table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        
+        .table tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        
+        .bg-success {
+            background-color: var(--success) !important;
+        }
+        
+        .bg-secondary {
+            background-color: var(--text-light) !important;
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            vertical-align: text-bottom;
+            border: 0.2em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+        
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Overlay for sidebar */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Media Queries for larger screens */
+        @media (min-width: 768px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+            
+            .navbar-toggler {
+                display: none;
+            }
+            
+            .bottom-nav {
+                display: none;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .profile-header {
+                flex-direction: row;
+                text-align: left;
+            }
+            
+            .profile-avatar {
+                margin-right: 20px;
+                margin-bottom: 0;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .content {
+                padding: 25px;
+            }
+            
+            .card-header {
+                padding: 18px 20px;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="appContainer">
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Patient Portal</h3>
+            </div>
+            
+            <div class="sidebar-menu">
+                <a href="#" class="menu-item active" id="dashboardMenu">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="menu-item" id="tokenMenu">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Access Tokens</span>
+                </a>
+                <a href="#" class="menu-item" id="profileMenu">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="#" class="menu-item" id="logoutMenu">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <nav class="navbar">
+                <button class="navbar-toggler" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="navbar-brand">Dashboard</div>
+                <div class="user-menu">
+                    <a href="#" class="dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="user-avatar" id="userAvatarSmall">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span id="usernameDisplay">Patient</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#" id="profileDropdown"><i class="fas fa-user me-2"></i> Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logoutDropdown"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </nav>
+            
+            <div class="content">
+                <div id="dashboardSection">
+                    <h2 class="section-title">Welcome</h2>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <button class="btn btn-primary w-100" id="generateTokenBtn">
+                                        <i class="fas fa-qrcode me-2"></i> Generate Token
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="btn btn-outline-primary w-100" id="viewProfileBtn">
+                                        <i class="fas fa-user me-2"></i> View Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Recent Tokens</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Token</th>
+                                            <th>Service</th>
+                                            <th>Created</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTokens">
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4">
+                                                <div class="loading-spinner text-primary"></div>
+                                                <p class="mt-3">Loading recent tokens...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="tokenSection" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="section-title">Access Tokens</h2>
+                        <button class="btn btn-outline-secondary" id="backToDashboardFromTokensBtn">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title">Generate New Token</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="tokenLayanan" class="form-label">Service Type</label>
+                                        <select class="form-control" id="tokenLayanan">
+                                            <option value="umum">General Consultation</option>
+                                            <option value="spesialis">Specialist Consultation</option>
+                                            <option value="gigi">Dental Care</option>
+                                            <option value="mata">Eye Care</option>
+                                            <option value="kandungan">Obstetrics & Gynecology</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="tokenCatatan" class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" id="tokenCatatan" rows="3" placeholder="Enter notes for the provider"></textarea>
+                                    </div>
+                                    <button class="btn btn-primary w-100" id="createTokenBtn">
+                                        <i class="fas fa-qrcode me-2"></i> Generate Token
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <div class="card token-display" id="tokenDisplay">
+                                <div class="card-header">
+                                    <h5 class="card-title">Your Token</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="qr-code-container">
+                                        <canvas id="qrCodeCanvas" style="width: 200px; height: 200px;"></canvas>
+                                    </div>
+                                    <p class="small mb-3">Show this QR code to your healthcare provider</p>
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control" id="tokenText" readonly>
+                                        <button class="btn btn-outline-secondary" type="button" id="copyTokenBtn">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                    <p><strong>Valid until:</strong> <span id="tokenExpiry"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Token History</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Token</th>
+                                            <th>Service</th>
+                                            <th>Created</th>
+                                            <th>Expires</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tokenHistory">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">
+                                                <div class="loading-spinner text-primary"></div>
+                                                <p class="mt-3">Loading token history...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="profileSection" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="section-title">My Profile</h2>
+                        <button class="btn btn-outline-secondary" id="backToDashboardFromProfileBtn">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </button>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <div class="card mb-4">
+                                <div class="card-body text-center">
+                                    <div class="profile-avatar mb-3" id="profileAvatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <h3 id="profileNameDisplay">Patient</h3>
+                                    <p class="text-muted" id="profileEmailDisplay">patient@example.com</p>
+                                    <hr>
+                                    <div class="text-start">
+                                        <p><strong>Patient ID:</strong> <span id="profilePatientId">PAT-12345678</span></p>
+                                        <p><strong>Date of Birth:</strong> <span id="profileDobDisplay">January 1, 1980</span></p>
+                                        <p><strong>Member Since:</strong> <span id="profileJoinDate">January 1, 2023</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Update Profile</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="profileForm">
+                                        <div class="form-group">
+                                            <label for="profileName" class="form-label">Full Name</label>
+                                            <input type="text" class="form-control" id="profileName" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="profileEmail" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="profileEmail" readonly>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="profileDob" class="form-label">Date of Birth</label>
+                                                    <input type="date" class="form-control" id="profileDob" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="profileGender" class="form-label">Gender</label>
+                                                    <select class="form-control" id="profileGender">
+                                                        <option value="male">Male</option>
+                                                        <option value="female">Female</option>
+                                                        <option value="other">Other</option>
+                                                        <option value="prefer-not-to-say">Prefer not to say</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="profileAddress" class="form-label">Address</label>
+                                            <textarea class="form-control" id="profileAddress" rows="2"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="profilePhone" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="profilePhone">
+                                        </div>
+                                        <hr>
+                                        <h5 class="mb-3">Change Password</h5>
+                                        <div class="form-group">
+                                            <label for="profileCurrentPassword" class="form-label">Current Password</label>
+                                            <input type="password" class="form-control" id="profileCurrentPassword">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="profileNewPassword" class="form-label">New Password</label>
+                                            <input type="password" class="form-control" id="profileNewPassword" minlength="6">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="profileConfirmPassword" class="form-label">Confirm New Password</label>
+                                            <input type="password" class="form-control" id="profileConfirmPassword" minlength="6">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100" id="saveProfileBtn">
+                                            <span id="saveProfileBtnText">Save Changes</span>
+                                            <div class="loading-spinner text-white ms-2" id="profileSpinner" style="display: none;"></div>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <a href="#" class="bottom-nav-item active" id="bottomDashboardBtn">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="bottom-nav-item" id="bottomTokenBtn">
+                <i class="fas fa-qrcode"></i>
+                <span>Tokens</span>
+            </a>
+            <a href="#" class="bottom-nav-item" id="bottomProfileBtn">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="toast-container"></div>
+
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Patient Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="form-group mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="loginPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+                            <span id="loginBtnText">Login</span>
+                            <div class="loading-spinner text-white ms-2" id="loginSpinner" style="display: none;"></div>
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>Don't have an account? <a href="#" id="showRegisterBtn">Register</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerModalLabel">Patient Registration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="form-group mb-3">
+                            <label for="registerName" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="registerName" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="registerDob" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="registerDob" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="registerPassword" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="registerPassword" minlength="6" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="registerConfirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="registerConfirmPassword" minlength="6" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="registerBtn">
+                            <span id="registerBtnText">Register</span>
+                            <div class="loading-spinner text-white ms-2" id="registerSpinner" style="display: none;"></div>
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="#" id="showLoginBtn">Login</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    
+    <script>
+        // Firebase configuration
+ const firebaseConfig = {
+  apiKey: "AIzaSyD1EaxhFilcZz37g26ymtK9CYt7fKKnCRw",
+  authDomain: "aplikasi-medis-block-cain.firebaseapp.com",
+  projectId: "aplikasi-medis-block-cain",
+  storageBucket: "aplikasi-medis-block-cain.firebasestorage.app",
+  messagingSenderId: "244107019673",
+  appId: "1:244107019673:web:70afe77184d7ea42e73f08",
+  measurementId: "G-EL99THSXXN"
+};
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // Initialize modals
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
+        
+        // DOM Elements
+        const appContainer = document.getElementById('appContainer');
+        const toastContainer = document.querySelector('.toast-container');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        
+        // Bottom nav elements
+        const bottomDashboardBtn = document.getElementById('bottomDashboardBtn');
+        const bottomTokenBtn = document.getElementById('bottomTokenBtn');
+        const bottomProfileBtn = document.getElementById('bottomProfileBtn');
+        
+        // App sections
+        const dashboardSection = document.getElementById('dashboardSection');
+        const tokenSection = document.getElementById('tokenSection');
+        const profileSection = document.getElementById('profileSection');
+        
+        // Menu items
+        const dashboardMenu = document.getElementById('dashboardMenu');
+        const tokenMenu = document.getElementById('tokenMenu');
+        const profileMenu = document.getElementById('profileMenu');
+        const logoutMenu = document.getElementById('logoutMenu');
+        
+        // Buttons
+        const generateTokenBtn = document.getElementById('generateTokenBtn');
+        const viewProfileBtn = document.getElementById('viewProfileBtn');
+        const createTokenBtn = document.getElementById('createTokenBtn');
+        const copyTokenBtn = document.getElementById('copyTokenBtn');
+        const backToDashboardFromTokensBtn = document.getElementById('backToDashboardFromTokensBtn');
+        const backToDashboardFromProfileBtn = document.getElementById('backToDashboardFromProfileBtn');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const profileSpinner = document.getElementById('profileSpinner');
+        const saveProfileBtnText = document.getElementById('saveProfileBtnText');
+        
+        // Profile elements
+        const profileForm = document.getElementById('profileForm');
+        const usernameDisplay = document.getElementById('usernameDisplay');
+        
+        // Login/Register elements
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const showRegisterBtn = document.getElementById('showRegisterBtn');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginSpinner = document.getElementById('loginSpinner');
+        const loginBtnText = document.getElementById('loginBtnText');
+        const registerBtn = document.getElementById('registerBtn');
+        const registerSpinner = document.getElementById('registerSpinner');
+        const registerBtnText = document.getElementById('registerBtnText');
+        
+        // Current user data
+        let currentUser = null;
+        let userData = {};
+        
+        let unsubscribeFunctions = {
+            tokens: null,
+            recentTokens: null
+        };
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check auth state
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // User is signed in
+                    currentUser = user;
+                    loadUserData(user);
+                    showDashboard();
+                    appContainer.style.display = 'block';
+                    
+                    // Load modals if they exist
+                    if (loginModal) loginModal.hide();
+                    if (registerModal) registerModal.hide();
+                    
+                    // Check if PWA is installed
+                    checkPWAInstallation();
+                } else {
+                    // No user is signed in
+                    appContainer.style.display = 'none';
+                    if (loginModal) loginModal.show();
+                }
+            });
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Add beforeinstallprompt event listener
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent the mini-infobar from appearing on mobile
+                e.preventDefault();
+                // Stash the event so it can be triggered later
+                deferredPrompt = e;
+                // Show install button or prompt
+                showInstallPromotion();
+            });
+        });
+        
+        // Check if PWA is already installed
+        function checkPWAInstallation() {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('Running as PWA');
+            } else {
+                console.log('Running in browser');
+                // You could show an install button here
+            }
+        }
+        
+        // Set up all event listeners
+        function setupEventListeners() {
+            // Sidebar toggle
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            
+            // Sidebar overlay click
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+            
+            // Menu click handlers
+            if (dashboardMenu) {
+                dashboardMenu.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showDashboard();
+                    toggleSidebar();
+                });
+            }
+            
+            if (tokenMenu) {
+                tokenMenu.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showTokenSection();
+                    toggleSidebar();
+                });
+            }
+            
+            if (profileMenu) {
+                profileMenu.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showProfileSection();
+                    toggleSidebar();
+                });
+            }
+            
+            if (logoutMenu || document.getElementById('logoutDropdown')) {
+                const logoutElements = [logoutMenu, document.getElementById('logoutDropdown')];
+                logoutElements.forEach(el => {
+                    if (el) {
+                        el.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            logoutUser();
+                        });
+                    }
+                });
+            }
+            
+            // Bottom navigation handlers
+            if (bottomDashboardBtn) {
+                bottomDashboardBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showDashboard();
+                    updateBottomNavActiveState('dashboard');
+                });
+            }
+            
+            if (bottomTokenBtn) {
+                bottomTokenBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showTokenSection();
+                    updateBottomNavActiveState('token');
+                });
+            }
+            
+            if (bottomProfileBtn) {
+                bottomProfileBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showProfileSection();
+                    updateBottomNavActiveState('profile');
+                });
+            }
+            
+            // Quick action buttons
+            if (generateTokenBtn) {
+                generateTokenBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showTokenSection();
+                    updateBottomNavActiveState('token');
+                });
+            }
+            
+            if (viewProfileBtn) {
+                viewProfileBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showProfileSection();
+                    updateBottomNavActiveState('profile');
+                });
+            }
+            
+            // Back buttons
+            if (backToDashboardFromTokensBtn) {
+                backToDashboardFromTokensBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showDashboard();
+                    updateBottomNavActiveState('dashboard');
+                });
+            }
+            
+            if (backToDashboardFromProfileBtn) {
+                backToDashboardFromProfileBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showDashboard();
+                    updateBottomNavActiveState('dashboard');
+                });
+            }
+            
+            // Create token button
+            if (createTokenBtn) {
+                createTokenBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    generateToken();
+                });
+            }
+            
+            // Copy token button
+            if (copyTokenBtn) {
+                copyTokenBtn.addEventListener('click', function() {
+                    const tokenText = document.getElementById('tokenText');
+                    if (tokenText) {
+                        tokenText.select();
+                        document.execCommand('copy');
+                        showToast('Token copied to clipboard!', 'success');
+                    }
+                });
+            }
+            
+            // Profile form submission
+            if (profileForm) {
+                profileForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    updateProfile();
+                });
+            }
+            
+            // Profile dropdown click handler
+            if (document.getElementById('profileDropdown')) {
+                document.getElementById('profileDropdown').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showProfileSection();
+                    updateBottomNavActiveState('profile');
+                });
+            }
+            
+            // Login/Register forms
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    loginUser();
+                });
+            }
+            
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    registerUser();
+                });
+            }
+            
+            if (showRegisterBtn) {
+                showRegisterBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loginModal.hide();
+                    registerModal.show();
+                });
+            }
+            
+            if (showLoginBtn) {
+                showLoginBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    registerModal.hide();
+                    loginModal.show();
+                });
+            }
+        }
+        
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+            
+            // Prevent scrolling when sidebar is open
+            if (sidebar.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        // Update bottom nav active state
+        function updateBottomNavActiveState(activeItem) {
+            // Remove active class from all items
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to the selected item
+            switch (activeItem) {
+                case 'dashboard':
+                    bottomDashboardBtn.classList.add('active');
+                    break;
+                case 'token':
+                    bottomTokenBtn.classList.add('active');
+                    break;
+                case 'profile':
+                    bottomProfileBtn.classList.add('active');
+                    break;
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast toast-${type}`;
+            toastEl.setAttribute('role', 'alert');
+            toastEl.setAttribute('aria-live', 'assertive');
+            toastEl.setAttribute('aria-atomic', 'true');
+            
+            const headerClass = type === 'success' ? 'text-success' : 'text-danger';
+            const headerIcon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            toastEl.innerHTML = `
+                <div class="toast-header ${headerClass}">
+                    <i class="fas ${headerIcon} me-2"></i>
+                    <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+            
+            toastContainer.appendChild(toastEl);
+            const toast = new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+            
+            // Remove toast after it hides
+            toastEl.addEventListener('hidden.bs.toast', function() {
+                toastEl.remove();
+            });
+        }
+        
+        // Navigation handlers
+        function showDashboard() {
+            dashboardSection.style.display = 'block';
+            tokenSection.style.display = 'none';
+            profileSection.style.display = 'none';
+            
+            // Update active menu
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            dashboardMenu.classList.add('active');
+            
+            // Update navbar title
+            document.querySelector('.navbar-brand').textContent = 'Dashboard';
+            
+            // Load recent tokens
+            loadRecentTokens();
+        }
+        
+        function showTokenSection() {
+            dashboardSection.style.display = 'none';
+            tokenSection.style.display = 'block';
+            profileSection.style.display = 'none';
+            
+            // Update active menu
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            tokenMenu.classList.add('active');
+            
+            // Update navbar title
+            document.querySelector('.navbar-brand').textContent = 'Access Tokens';
+            
+            // Load token history
+            loadTokenHistory();
+        }
+        
+        function showProfileSection() {
+            dashboardSection.style.display = 'none';
+            tokenSection.style.display = 'none';
+            profileSection.style.display = 'block';
+            
+            // Update active menu
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            profileMenu.classList.add('active');
+            
+            // Update navbar title
+            document.querySelector('.navbar-brand').textContent = 'My Profile';
+        }
+        
+        // Generate token function
+        function generateToken() {
+            const service = document.getElementById('tokenLayanan').value;
+            const notes = document.getElementById('tokenCatatan').value;
+            
+            const token = 'TOK-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            
+            // Get patient UID
+            const pasien_id = currentUser ? currentUser.uid : null;
+            if (!pasien_id) {
+                showToast('Anda harus login untuk membuat token akses.', 'error');
+                return;
+            }
+
+            // Create JSON object for QR Code
+            const qrContentData = {
+                pasien_id: pasien_id,
+                token: token
+            };
+            const qrContent = JSON.stringify(qrContentData); // Convert to JSON string
+            
+            // Get the canvas element
+            const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+            if (qrCodeCanvas) {
+                // Clear previous QR code
+                const context = qrCodeCanvas.getContext('2d');
+                context.clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height);
+
+                QRCode.toCanvas(qrCodeCanvas, qrContent, { width: 200, errorCorrectionLevel: 'H' }, function(error) {
+                    if (error) {
+                        console.error('Error generating QR code:', error);
+                        // Fallback to text if QR generation fails
+                        const qrCodeContainer = document.querySelector('.qr-code-container');
+                        if (qrCodeContainer) {
+                            qrCodeContainer.innerHTML = '<i class="fas fa-qrcode fa-5x text-muted"></i><p class="text-danger small mt-2">QR Code Error</p>';
+                        }
+                    }
+                });
+            }
+            
+            // Show token info in the input field
+            const tokenText = document.getElementById('tokenText');
+            if (tokenText) {
+                tokenText.value = token;
+            }
+            
+            // Set expiry (24 hours from now)
+            const now = new Date();
+            const expiry = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const tokenExpiry = document.getElementById('tokenExpiry');
+            if (tokenExpiry) {
+                tokenExpiry.textContent = expiry.toLocaleString('id-ID', { // Changed to id-ID for consistency
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            
+            // Save token to Firestore
+            const tokenData = {
+                token: token,
+                service: service,
+                notes: notes || '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                expiresAt: firebase.firestore.Timestamp.fromDate(expiry), // Store as Firestore Timestamp
+                used: false,
+                userId: currentUser.uid,
+                userName: userData.name || 'Patient'
+            };
+            
+            db.collection('tokens').add(tokenData)
+                .then(() => {
+                    // Show token display
+                    const tokenDisplay = document.getElementById('tokenDisplay');
+                    if (tokenDisplay) {
+                        tokenDisplay.style.display = 'block';
+                    }
+                    showToast('Token generated successfully!', 'success');
+                    
+                    // Update token history
+                    loadTokenHistory();
+                    
+                    // Clear notes
+                    document.getElementById('tokenCatatan').value = '';
+                })
+                .catch(error => {
+                    showToast('Failed to save token: ' + error.message, 'error');
+                });
+        }
+        
+        // Load user data
+        function loadUserData(user) {
+            // Get user document from Firestore
+            db.collection('users').doc(user.uid).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        userData = doc.data();
+                        updateUIWithUserData(user, userData);
+                    } else {
+                        // Create user document if it doesn't exist (e.g., first login after registration)
+                        const defaultUserData = {
+                            name: user.displayName || user.email.split('@')[0], // Use email part as fallback for name
+                            email: user.email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        };
+                        
+                        db.collection('users').doc(user.uid).set(defaultUserData)
+                            .then(() => {
+                                userData = defaultUserData;
+                                updateUIWithUserData(user, userData);
+                                showToast('User profile created.', 'info');
+                            })
+                            .catch(error => {
+                                console.error('Error creating user document:', error);
+                                showToast('Error loading user data', 'error');
+                            });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error getting user document:', error);
+                    showToast('Error loading user data', 'error');
+                });
+        }
+        
+        // Update UI with user data
+        function updateUIWithUserData(user, userData) {
+            // Update UI with user data
+            if (usernameDisplay) usernameDisplay.textContent = userData.name || 'Patient';
+            
+            // Load profile data
+            loadProfileData(user, userData);
+        }
+        
+        // Load profile data
+        function loadProfileData(user, userData) {
+            // Profile section
+            if (document.getElementById('profileNameDisplay')) {
+                document.getElementById('profileNameDisplay').textContent = userData.name || 'Patient';
+            }
+            if (document.getElementById('profileEmailDisplay')) {
+                document.getElementById('profileEmailDisplay').textContent = user.email;
+            }
+            
+            if (document.getElementById('profileDobDisplay')) {
+                // Ensure dob is a Firestore Timestamp or convertable to Date
+                if (userData.dob && userData.dob.toDate) { // Check if it's a Firestore Timestamp
+                    document.getElementById('profileDobDisplay').textContent = userData.dob.toDate().toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                } else if (userData.dob instanceof Date) { // Check if it's a JS Date object
+                    document.getElementById('profileDobDisplay').textContent = userData.dob.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                } else if (typeof userData.dob === 'string' && userData.dob.match(/^\d{4}-\d{2}-\d{2}$/)) { // YYYY-MM-DD string
+                    document.getElementById('profileDobDisplay').textContent = new Date(userData.dob).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                } else {
+                    document.getElementById('profileDobDisplay').textContent = 'Tidak ditentukan'; // Updated text
+                }
+            }
+            
+            if (document.getElementById('profilePatientId')) {
+                document.getElementById('profilePatientId').textContent = 'PAT-' + user.uid.substring(0, 8).toUpperCase();
+            }
+            
+            if (document.getElementById('profileJoinDate')) {
+                const joinDate = user.metadata.creationTime ? new Date(user.metadata.creationTime) : new Date();
+                document.getElementById('profileJoinDate').textContent = joinDate.toLocaleDateString('id-ID', { // Changed to id-ID
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            
+            // Profile form
+            if (document.getElementById('profileName')) {
+                document.getElementById('profileName').value = userData.name || '';
+            }
+            if (document.getElementById('profileEmail')) {
+                document.getElementById('profileEmail').value = user.email;
+            }
+            if (document.getElementById('profileDob')) {
+                if (userData.dob && userData.dob.toDate) { // If it's a Firestore Timestamp
+                    document.getElementById('profileDob').valueAsDate = userData.dob.toDate();
+                } else if (userData.dob instanceof Date) { // If it's a JS Date object
+                     document.getElementById('profileDob').valueAsDate = userData.dob;
+                } else if (typeof userData.dob === 'string' && userData.dob.match(/^\d{4}-\d{2}-\d{2}$/)) { // If it's a YYYY-MM-DD string
+                    document.getElementById('profileDob').valueAsDate = new Date(userData.dob);
+                }
+                else {
+                    document.getElementById('profileDob').value = '';
+                }
+            }
+            if (document.getElementById('profileGender')) {
+                if (userData.gender) {
+                    document.getElementById('profileGender').value = userData.gender;
+                } else {
+                    document.getElementById('profileGender').value = 'male';
+                }
+            }
+            if (document.getElementById('profileAddress')) {
+                document.getElementById('profileAddress').value = userData.address || '';
+            }
+            if (document.getElementById('profilePhone')) {
+                document.getElementById('profilePhone').value = userData.phone || '';
+            }
+            
+            // Avatar
+            const name = userData.name || '';
+            const initials = name.split(' ').filter(n => n.length > 0).map(name => name[0]).join('').toUpperCase();
+            
+            // Profile avatar
+            const profileAvatar = document.getElementById('profileAvatar');
+            if (profileAvatar) {
+                profileAvatar.innerHTML = initials.substring(0, 2) || 'PT';
+            }
+            
+            // User dropdown avatar
+            const userAvatar = document.querySelector('.user-avatar');
+            if (userAvatar) {
+                userAvatar.innerHTML = initials.substring(0, 1) || 'P';
+            }
+            
+            // Small user avatar
+            const userAvatarSmall = document.getElementById('userAvatarSmall');
+            if (userAvatarSmall) {
+                userAvatarSmall.innerHTML = initials.substring(0, 1) || 'P';
+            }
+        }
+        
+        // Load token history with realtime updates
+        function loadTokenHistory() {
+            const tokenHistory = document.getElementById('tokenHistory');
+            if (!tokenHistory) return;
+            
+            tokenHistory.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="loading-spinner text-primary"></div><p class="mt-3">Loading token history...</p></td></tr>';
+            
+            // Unsubscribe from previous listeners
+            if (unsubscribeFunctions.tokens) {
+                unsubscribeFunctions.tokens();
+            }
+            
+            unsubscribeFunctions.tokens = db.collection('tokens')
+                .where('userId', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        tokenHistory.innerHTML = '<tr><td colspan="5" class="text-center py-4">No tokens found</td></tr>';
+                        return;
+                    }
+                    
+                    tokenHistory.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const token = { id: doc.id, ...doc.data() };
+                        // Safely access toDate()
+                        const createdAt = token.createdAt?.toDate ? token.createdAt.toDate() : (new Date(token.createdAt));
+                        const expiresAt = token.expiresAt?.toDate ? token.expiresAt.toDate() : (new Date(token.expiresAt));
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${token.token}</td>
+                            <td>${getServiceName(token.service)}</td>
+                            <td>${createdAt.toLocaleString('id-ID', { // Changed to id-ID
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</td>
+                            <td>${expiresAt.toLocaleString('id-ID', { // Changed to id-ID
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</td>
+                            <td><span class="badge ${token.used ? 'bg-secondary' : 'bg-success'}">${token.used ? 'Used' : 'Active'}</span></td>
+                        `;
+                        
+                        tokenHistory.appendChild(row);
+                    });
+                }, error => {
+                    console.error('Error loading token history:', error);
+                    tokenHistory.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load token history</td></tr>';
+                });
+        }
+        
+        // Load recent tokens (for dashboard)
+        function loadRecentTokens() {
+            const recentTokens = document.getElementById('recentTokens');
+            if (!recentTokens) return;
+            
+            recentTokens.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="loading-spinner text-primary"></div><p class="mt-3">Loading recent tokens...</p></td></tr>';
+            
+            // Unsubscribe from previous listeners
+            if (unsubscribeFunctions.recentTokens) {
+                unsubscribeFunctions.recentTokens();
+            }
+            
+            unsubscribeFunctions.recentTokens = db.collection('tokens')
+                .where('userId', '==', currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .limit(5)
+                .onSnapshot(snapshot => {
+                    if (snapshot.empty) {
+                        recentTokens.innerHTML = '<tr><td colspan="4" class="text-center py-4">No recent tokens</td></tr>';
+                        return;
+                    }
+                    
+                    recentTokens.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const token = { id: doc.id, ...doc.data() };
+                        // Safely access toDate()
+                        const createdAt = token.createdAt?.toDate ? token.createdAt.toDate() : (new Date(token.createdAt));
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${token.token}</td>
+                            <td>${getServiceName(token.service)}</td>
+                            <td>${createdAt.toLocaleString('id-ID', { // Changed to id-ID
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</td>
+                            <td><span class="badge ${token.used ? 'bg-secondary' : 'bg-success'}">${token.used ? 'Used' : 'Active'}</span></td>
+                        `;
+                        
+                        recentTokens.appendChild(row);
+                    });
+                }, error => {
+                    console.error('Error loading recent tokens:', error);
+                    recentTokens.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Failed to load recent tokens</td></tr>';
+                });
+        }
+        
+        // Get service name from value
+        function getServiceName(serviceValue) {
+            const services = {
+                'umum': 'General Consultation',
+                'spesialis': 'Specialist Consultation',
+                'gigi': 'Dental Care',
+                'mata': 'Eye Care',
+                'kandungan': 'Obstetrics & Gynecology'
+            };
+            
+            return services[serviceValue] || serviceValue || 'General Service';
+        }
+        
+        // Update profile
+        function updateProfile() {
+            const name = document.getElementById('profileName').value;
+            const dob = document.getElementById('profileDob').value;
+            const gender = document.getElementById('profileGender').value;
+            const address = document.getElementById('profileAddress').value;
+            const phone = document.getElementById('profilePhone').value;
+            const currentPassword = document.getElementById('profileCurrentPassword').value;
+            const newPassword = document.getElementById('profileNewPassword').value;
+            const confirmPassword = document.getElementById('profileConfirmPassword').value;
+            
+            // Show loading state
+            saveProfileBtn.disabled = true;
+            profileSpinner.style.display = 'block';
+            saveProfileBtnText.textContent = 'Saving...';
+            
+            // Validate passwords if changed
+            if (newPassword) {
+                if (newPassword !== confirmPassword) {
+                    showToast('New passwords do not match!', 'error');
+                    saveProfileBtn.disabled = false;
+                    profileSpinner.style.display = 'none';
+                    saveProfileBtnText.textContent = 'Save Changes';
+                    return;
+                }
+                
+                if (!currentPassword) {
+                    showToast('Please enter your current password to change it', 'error');
+                    saveProfileBtn.disabled = false;
+                    profileSpinner.style.display = 'none';
+                    saveProfileBtnText.textContent = 'Save Changes';
+                    return;
+                }
+            }
+            
+            // Update profile in Firestore
+            const updateData = {
+                name: name,
+                dob: dob ? firebase.firestore.Timestamp.fromDate(new Date(dob)) : null, // Store as Firestore Timestamp
+                gender: gender,
+                address: address,
+                phone: phone,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Remove empty fields
+            Object.keys(updateData).forEach(key => {
+                if (updateData[key] === null || updateData[key] === '') { // Also check for empty string for optional fields
+                    delete updateData[key];
+                }
+            });
+            
+            // First update Firestore document
+            db.collection('users').doc(currentUser.uid).update(updateData)
+                .then(() => {
+                    // Update user data in memory
+                    userData = { ...userData, ...updateData };
+                    
+                    // Update UI
+                    updateUIWithUserData(currentUser, userData); // Refresh all UI elements
+                    
+                    // If password change was requested
+                    if (newPassword && currentPassword) {
+                        // Reauthenticate user
+                        const credential = firebase.auth.EmailAuthProvider.credential(
+                            currentUser.email, 
+                            currentPassword
+                        );
+                        
+                        return currentUser.reauthenticateWithCredential(credential)
+                            .then(() => {
+                                // Update password
+                                return currentUser.updatePassword(newPassword);
+                            })
+                            .then(() => {
+                                showToast('Profile and password updated successfully!', 'success');
+                                // Clear password fields
+                                document.getElementById('profileCurrentPassword').value = '';
+                                document.getElementById('profileNewPassword').value = '';
+                                document.getElementById('profileConfirmPassword').value = '';
+                            });
+                    } else {
+                        showToast('Profile updated successfully!', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating profile:', error);
+                    showToast('Failed to update profile: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    saveProfileBtn.disabled = false;
+                    profileSpinner.style.display = 'none';
+                    saveProfileBtnText.textContent = 'Save Changes';
+                });
+        }
+        
+        // Login user
+        function loginUser() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginSpinner.style.display = 'block';
+            loginBtnText.textContent = 'Logging in...';
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Login successful
+                    loginModal.hide();
+                    showToast('Login successful!', 'success');
+                })
+                .catch((error) => {
+                    console.error('Login error:', error);
+                    showToast('Login failed: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    loginBtn.disabled = false;
+                    loginSpinner.style.display = 'none';
+                    loginBtnText.textContent = 'Login';
+                });
+        }
+        
+     // Register user
+        function registerUser() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const dob = document.getElementById('registerDob').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match!', 'error');
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerSpinner.style.display = 'block';
+            registerBtnText.textContent = 'Registering...';
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    // Update user profile in Firebase Auth
+                    return user.updateProfile({
+                        displayName: name
+                    }).then(() => {
+                        // Save user data to Firestore
+                        return db.collection('users').doc(user.uid).set({
+                            name: name,
+                            email: email,
+                            dob: firebase.firestore.Timestamp.fromDate(new Date(dob)), // Store dob as Firestore Timestamp
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            role: 'patient' // Assign a role
+                        });
+                    });
+                })
+                .then(() => {
+                    registerModal.hide();
+                    showToast('Registration successful! Please login.', 'success');
+                    // Optionally show login modal after successful registration
+                    loginModal.show();
+                })
+                .catch((error) => {
+                    console.error('Registration error:', error);
+                    showToast('Registration failed: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    registerBtn.disabled = false;
+                    registerSpinner.style.display = 'none';
+                    registerBtnText.textContent = 'Register';
+                });
+        }
+
+        // Logout user
+        function logoutUser() {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            }).catch((error) => {
+                console.error("Logout error:", error);
+                showToast("Logout failed: " + error.message, "error");
+            });
+        }
+    </script>
+</body>
+</html>

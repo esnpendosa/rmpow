@@ -1,0 +1,3091 @@
+<!-- /**
+ * @license
+ * APLIKASI REKAM MEDIS BERBASIS BLOCKCHAIN dengan ALGORITMA KONSENSUS PROOF-of-WORK
+ * Copyright (c) 2025 Muhammad As'ad Muhibbin Akbar
+ * Licensed under the MIT License.
+ * See LICENSE file for details.
+ * See LICENSE file for details.
+ */ -->
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MedicalRecord - Dokter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-dark: #303f9f;
+            --primary-light: #e8eaf6;
+            --secondary: #f8f9fa;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-color: #e0e6ed;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --sidebar-width: 280px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #f5f7fb;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            height: 100vh;
+            position: fixed;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            transform: translateX(0);
+        }
+        
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+        
+        .sidebar-header h3 {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar-header h6 {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .blockchain-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+        
+        .sidebar-menu {
+            padding: 15px 0;
+            overflow-y: auto;
+            height: calc(100vh - 150px);
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+        }
+        
+        .menu-item:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        
+        .menu-item.active {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .menu-item i {
+            margin-right: 8px;
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Mobile Toggle Button */
+        .sidebar-toggle {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1050;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s;
+            min-width: 0;
+        }
+        
+        /* Navbar Styles */
+        .navbar {
+            background: white;
+            padding: 12px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 60%;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-menu .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .user-menu .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 0.9rem;
+        }
+        
+        /* Content Styles */
+        .content {
+            padding: 15px;
+        }
+        
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            position: relative;
+            padding-bottom: 8px;
+            font-size: 1.3rem;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .stat-card.primary {
+            background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+            color: white;
+        }
+        
+        .stat-card.success {
+            background: linear-gradient(135deg, #4caf50, #66bb6a);
+            color: white;
+        }
+        
+        .stat-card.warning {
+            background: linear-gradient(135deg, #ff9800, #ffb74d);
+            color: white;
+        }
+        
+        .stat-card.info {
+            background: linear-gradient(135deg, #2196f3, #64b5f6);
+            color: white;
+        }
+        
+        .stat-card h6 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header .card-title {
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(63, 81, 181, 0.3);
+        }
+        
+        .btn-outline-primary {
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            background: transparent;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        
+        .form-control, .form-select {
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+            outline: none;
+        }
+        
+        textarea.form-control {
+            min-height: 80px;
+        }
+        
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+            width: 100%;
+            min-width: 600px;
+        }
+        
+        .table thead th {
+            background: var(--primary-light);
+            border-bottom: none;
+            font-weight: 600;
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+        
+        .table tbody td {
+            padding: 12px;
+            vertical-align: middle;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            font-size: 0.9rem;
+        }
+        
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 0.4em 0.6em;
+            font-weight: 500;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        
+        /* Modals */
+        .modal-content {
+            border-radius: 12px;
+            overflow: hidden;
+            border: none;
+        }
+        
+        .modal-header {
+            background: var(--primary);
+            color: white;
+            border-bottom: none;
+            padding: 1rem;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .modal-body {
+            padding: 1rem;
+        }
+        
+        .modal-footer {
+            border-top: none;
+            padding: 0.8rem;
+            background: #f9f9f9;
+        }
+        
+        /* QR Scanner Styles */
+        .scanner-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            max-height: 500px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #qrScanner {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .scanner-header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            z-index: 10;
+            text-align: center;
+        }
+        
+        #scanner-viewport {
+            flex: 1;
+            position: relative;
+            background: black;
+            overflow: hidden;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .scanner-frame {
+            width: 70%;
+            max-width: 300px;
+            aspect-ratio: 1;
+            border: 3px solid rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.7);
+            transition: border-color 0.3s;
+        }
+        
+        .scanner-frame.scan-success {
+            border-color: #4CAF50;
+            animation: pulseSuccess 1s;
+        }
+        
+        @keyframes pulseSuccess {
+            0% { border-color: rgba(76, 175, 80, 0.7); }
+            50% { border-color: rgba(76, 175, 80, 1); }
+            100% { border-color: rgba(76, 175, 80, 0.7); }
+        }
+        
+        .scanner-guide {
+            color: white;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            padding: 0 15px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .scanner-footer {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -1px 2px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .flash-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            color: #5f6368;
+            font-size: 1.5rem;
+        }
+        
+        .flash-toggle:active {
+            background: #f1f3f4;
+        }
+        
+        .flash-toggle.active {
+            color: var(--warning);
+        }
+        
+        .scanner-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            color: white;
+            font-size: 3rem;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        .status-message {
+            display: inline-block;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            backdrop-filter: blur(4px);
+            max-width: 80%;
+            transition: all 0.3s;
+        }
+        
+        .status-message.success {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        
+        .status-message.error {
+            background: rgba(244, 67, 54, 0.9);
+        }
+        
+        /* Result Panel Styles */
+        .result-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 24px 24px 0 0;
+            padding: 25px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            transform: translateY(100%);
+            transition: transform 0.4s ease-out;
+            z-index: 100;
+        }
+        
+        .result-container.active {
+            transform: translateY(0);
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-header h5 {
+            margin: 0;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .close-result {
+            background: none;
+            border: none;
+            color: #5f6368;
+            font-size: 1.4rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .close-result:active {
+            background: #f8f9fa;
+        }
+        
+        .token-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .token-info-item {
+            display: flex;
+        }
+        
+        .token-info-item strong {
+            width: 110px;
+            color: #5f6368;
+            font-weight: 500;
+        }
+        
+        .token-info-item span {
+            flex: 1;
+            color: #202124;
+            font-weight: 500;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-btn.outline {
+            background: white;
+            border: 1px solid #dadce0;
+            color: #202124;
+        }
+        
+        .action-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .manual-input {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .info-text {
+            text-align: center;
+            color: #5f6368;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            padding: 0 10px;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 250px;
+            }
+            
+            .main-content {
+                margin-left: 250px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .card-header .btn {
+                width: 100%;
+            }
+            
+            /* Adjust scanner for mobile */
+            .scanner-container {
+                height: 50vh;
+            }
+            
+            .scanner-frame {
+                width: 80%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 10px;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .stat-card .value {
+                font-size: 1.3rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-buttons .btn {
+                width: 100%;
+            }
+            
+            .modal-dialog {
+                margin: 10px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .navbar {
+                padding: 10px;
+            }
+            
+            .navbar-brand {
+                font-size: 1rem;
+                max-width: 50%;
+            }
+            
+            .user-menu .user-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-card {
+                padding: 12px;
+            }
+            
+            .form-control, .form-select {
+                padding: 8px 10px;
+            }
+            
+            /* QR Scanner adjustments */
+            .scanner-container {
+                height: 60vh;
+            }
+            
+            .scanner-frame {
+                width: 80%;
+                max-width: 250px;
+            }
+            
+            .flash-toggle {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+            }
+        }
+        
+        /* Animation for cards */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 9999;
+            max-width: calc(100% - 30px);
+        }
+        
+        .toast {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            border: none;
+            margin-bottom: 10px;
+            max-width: 100%;
+        }
+        
+        .toast-header {
+            font-weight: 600;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        
+        .toast-success .toast-header {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+        
+        .toast-error .toast-header {
+            background: rgba(244, 67, 54, 0.2);
+            color: var(--danger);
+        }
+        
+        .toast-body {
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>MedicalRecord</h3>
+            <h6>Blockchain System</h6>
+            <div class="mt-2">
+                <span class="blockchain-badge">
+                    <i class="fas fa-link"></i> Blockchain Connected
+                </span>
+            </div>
+        </div>
+        
+        <div class="sidebar-menu">
+            <a href="#" class="menu-item active" id="dashboardMenu">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="menu-item" id="pemeriksaanMenu">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Pemeriksaan</span>
+            </a>
+            <a href="#" class="menu-item" id="pasienMenu">
+                <i class="fas fa-user-friends"></i>
+                <span>Pasien Saya</span>
+            </a>
+            <a href="#" class="menu-item" id="rekamMedisMenu">
+                <i class="fas fa-file-medical"></i>
+                <span>Rekam Medis</span>
+            </a>
+            <a href="#" class="menu-item" id="logoutMenu">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <div class="main-content">
+        <nav class="navbar">
+            <div class="navbar-brand">Dashboard Dokter</div>
+            <div class="user-menu">
+                <a href="#" class="dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <span id="usernameDisplay">Dr. Smith</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="profileDropdown"><i class="fas fa-user me-2"></i> Profil</a></li>
+                    <li><a class="dropdown-item" href="#" id="settingsDropdown"><i class="fas fa-cog me-2"></i> Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" id="logoutDropdown"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div class="content">
+            <div id="dashboardSection" class="fade-in">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="section-title">Dashboard Dokter</h2>
+                    <div class="text-muted small">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        <span id="currentDate"></span>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <h6>Pasien Hari Ini</h6>
+                        <div class="value" id="pasienHariIni">0</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h6>Total Pasien</h6>
+                        <div class="value" id="totalPasienDokter">0</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <h6>Rekam Medis</h6>
+                        <div class="value" id="totalRekamMedisDokter">0</div>
+                    </div>
+                    <div class="stat-card info">
+                        <h6>Blockchain</h6>
+                        <div class="value" id="totalBlocksDokter">0</div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title"><i class="fas fa-calendar-day me-2"></i> Jadwal Hari Ini</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Waktu</th>
+                                                <th>Pasien</th>
+                                                <th>Status</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="jadwalTableBody">
+                                            <tr>
+                                                <td colspan="4" class="text-center">Memuat data...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title"><i class="fas fa-chart-line me-2"></i> Statistik Bulan Ini</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="dokterChart" width="100%" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="pemeriksaanSection" style="display: none;" class="fade-in">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="section-title">Pemeriksaan Pasien</h2>
+                    <button class="btn btn-outline-secondary btn-sm" id="backToDashboardFromPemeriksaanBtn">
+                        <i class="fas fa-arrow-left me-1"></i> Kembali
+                    </button>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title"><i class="fas fa-clipboard-check me-2"></i> Pemeriksaan Baru</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="action-buttons mb-3">
+                            <button class="btn btn-primary" id="scanQRBtn">
+                                <i class="fas fa-qrcode me-2"></i> Scan QR Pasien
+                            </button>
+                            <button class="btn btn-outline-primary" id="manualTokenBtn">
+                                <i class="fas fa-keyboard me-2"></i> Input Manual
+                            </button>
+                        </div>
+                        
+                        <div id="pemeriksaanFormContainer" style="display: none;">
+                            <form id="pemeriksaanForm">
+                                <div class="row mb-2">
+                                    <div class="col-md-6 mb-2">
+                                        <label for="pasienName" class="form-label">Nama Pasien</label>
+                                        <input type="text" class="form-control" id="pasienName" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label for="pasienDob" class="form-label">Tanggal Lahir</label>
+                                        <input type="text" class="form-control" id="pasienDob" readonly>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="diagnosa" class="form-label">Diagnosa</label>
+                                    <textarea class="form-control" id="diagnosa" rows="2" required placeholder="Masukkan diagnosa pasien"></textarea>
+                                </div>
+                                <div class="mb-2">
+                                    <label for="tindakan" class="form-label">Tindakan</label>
+                                    <textarea class="form-control" id="tindakan" rows="2" required placeholder="Masukkan tindakan yang dilakukan"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="catatan" class="form-label">Catatan Tambahan</label>
+                                    <textarea class="form-control" id="catatan" rows="2" placeholder="Masukkan catatan tambahan (opsional)"></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary" id="simpanPemeriksaanBtn">
+                                        <i class="fas fa-save me-2"></i> Simpan Rekam Medis
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="pasienSection" style="display: none;" class="fade-in">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="section-title">Pasien Saya</h2>
+                    <button class="btn btn-outline-secondary btn-sm" id="backToDashboardFromPasienBtn">
+                        <i class="fas fa-arrow-left me-1"></i> Kembali
+                    </button>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title"><i class="fas fa-user-friends me-2"></i> Daftar Pasien</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end mb-2">
+                            <div class="input-group" style="max-width: 300px;">
+                                <input type="text" class="form-control" id="searchPasienTableInput" placeholder="Cari pasien...">
+                                <button class="btn btn-outline-secondary" type="button" id="searchPasienTableBtn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="pasienDokterTable">
+                                <thead>
+                                    <tr>
+                                        <th>Nama</th>
+                                        <th>Email</th>
+                                        <th>Tanggal Lahir</th>
+                                        <th>Terakhir Diperiksa</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pasienDokterTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Memuat data pasien...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="rekamMedisSection" style="display: none;" class="fade-in">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="section-title">Rekam Medis</h2>
+                    <button class="btn btn-outline-secondary btn-sm" id="backToDashboardFromRekamMedisBtn">
+                        <i class="fas fa-arrow-left me-1"></i> Kembali
+                    </button>
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title"><i class="fas fa-file-medical me-2"></i> Daftar Rekam Medis</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end mb-2">
+                            <div class="input-group" style="max-width: 300px;">
+                                <input type="text" class="form-control" id="searchRekamMedisInput" placeholder="Cari rekam medis...">
+                                <button class="btn btn-outline-secondary" type="button" id="searchRekamMedisBtn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="rekamMedisTable">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Pasien</th>
+                                        <th>Diagnosa</th>
+                                        <th>Block Hash</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rekamMedisTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Memuat rekam medis...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div class="modal fade" id="scanQRModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-qrcode me-2"></i> Scan QR Pasien</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-0">
+                    <div class="scanner-container">
+                        <div class="scanner-header bg-white py-3">
+                            <h5 class="mb-0"><i class="fas fa-qrcode me-2"></i> Scanner Rekam Medis</h5>
+                        </div>
+                        
+                        <div id="scanner-viewport">
+                            <div class="scanner-loader" id="scannerLoader">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            
+                            <div class="status-indicator">
+                                <div class="status-message" id="statusMessage">Mengaktifkan kamera...</div>
+                            </div>
+                            
+                            <div id="qrScanner"></div>
+                            
+                            <div class="scanner-overlay">
+                                <div class="scanner-frame"></div>
+                                <div class="scanner-guide">Arahkan kamera ke QR Code pasien</div>
+                            </div>
+                        </div>
+                        
+                        <div class="scanner-footer">
+                            <button class="flash-toggle" id="flashToggle">
+                                <i class="fas fa-bolt"></i>
+                            </button>
+                            <p class="mb-0">Pindai kode QR untuk mengakses rekam medis pasien</p>
+                        </div>
+                    </div>
+                    
+                    <div class="result-container" id="resultContainer">
+                        <div class="result-header">
+                            <h5><i class="fas fa-user-injured me-2"></i> Data Pasien</h5>
+                            <button class="close-result" id="closeResult">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="token-info">
+                            <div class="token-info-item">
+                                <strong>Token:</strong>
+                                <span id="resultToken">-</span>
+                            </div>
+                            <div class="token-info-item">
+                                <strong>ID Pasien:</strong>
+                                <span id="resultPatientId">-</span>
+                            </div>
+                            <div class="token-info-item">
+                                <strong>Nama:</strong>
+                                <span id="resultPatientName">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-actions">
+                            <button class="action-btn outline" id="copyTokenBtn">
+                                <i class="fas fa-copy"></i> Salin
+                            </button>
+                            <button class="action-btn primary" id="continueBtn">
+                                <i class="fas fa-check"></i> Lanjutkan
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="manual-input p-3">
+                        <p class="text-center mb-2">Atau masukkan token secara manual</p>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="manualTokenInput" placeholder="Masukkan token pasien">
+                            <button class="btn btn-primary" id="verifyTokenBtn">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                        <p class="info-text small text-muted mt-2">Token diberikan oleh pasien untuk mengakses rekam medis. Format token biasanya dimulai dengan "TOK-".</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Other modals -->
+    <div class="modal fade" id="manualTokenModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-keyboard me-2"></i> Input Token Manual</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="manualTokenInput2" class="form-label">Token Pasien</label>
+                        <input type="text" class="form-control" id="manualTokenInput2" placeholder="Masukkan token pasien">
+                        <small class="text-muted">Token diberikan oleh pasien untuk mengakses rekam medis</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-primary" id="verifyTokenBtn2">
+                        <i class="fas fa-check me-1"></i> Verifikasi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewPasienModalDokter" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-injured me-2"></i> Detail Pasien</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Nama Lengkap</label>
+                                <div class="form-control-plaintext" id="viewPasienNameDokter">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <div class="form-control-plaintext" id="viewPasienEmailDokter">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Lahir</label>
+                                <div class="form-control-plaintext" id="viewPasienDobDokter">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3"><i class="fas fa-file-medical me-2"></i> Riwayat Rekam Medis</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Diagnosa</th>
+                                    <th>Tindakan</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pasienRekamMedisBodyDokter">
+                                <tr>
+                                    <td colspan="4" class="text-center">Memuat data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Tutup
+                    </button>
+                    <button type="button" class="btn btn-primary" id="buatPemeriksaanBtn">
+                        <i class="fas fa-plus me-1"></i> Buat Pemeriksaan Baru
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="viewRekamMedisModalDokter" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-medical me-2"></i> Detail Rekam Medis</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Pemeriksaan</label>
+                                <div class="form-control-plaintext" id="rekamMedisTanggalDokter">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Nama Pasien</label>
+                                <div class="form-control-plaintext" id="rekamMedisPasienDokter">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="form-label">Diagnosa</label>
+                        <div class="form-control-plaintext" id="rekamMedisDiagnosaDokter">-</div>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="form-label">Tindakan</label>
+                        <div class="form-control-plaintext" id="rekamMedisTindakanDokter">-</div>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="form-label">Catatan Tambahan</label>
+                        <div class="form-control-plaintext" id="rekamMedisCatatanDokter">-</div>
+                    </div>
+                    
+                    <h5 class="mb-3"><i class="fas fa-link me-2"></i> Blockchain Data</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Block Hash</label>
+                                <div class="form-control-plaintext text-truncate" id="rekamMedisHashDokter">-</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Block Timestamp</label>
+                                <div class="form-control-plaintext" id="rekamMedisBlockTimeDokter">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nonce</label>
+                        <div class="form-control-plaintext" id="rekamMedisNonceDokter">-</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="miningModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cube me-2"></i> Menambahkan ke Blockchain</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="miningProgress" style="width: 0%"></div>
+                    </div>
+                    <p class="text-center mb-0" id="miningStatus">Mempersiapkan penambangan block...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user me-2"></i> Profil Dokter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="profileForm">
+                        <div class="form-group mb-3">
+                            <label for="profileName" class="form-label">Nama Lengkap</label>
+                            <input type="text" class="form-control" id="profileName" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="profileEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="profileEmail" readonly>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="profileSpesialis" class="form-label">Spesialisasi</label>
+                            <input type="text" class="form-control" id="profileSpesialis">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="profilePassword" class="form-label">Password Baru</label>
+                            <input type="password" class="form-control" id="profilePassword" placeholder="Kosongkan jika tidak ingin mengubah">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="profileConfirmPassword" class="form-label">Konfirmasi Password Baru</label>
+                            <input type="password" class="form-control" id="profileConfirmPassword" placeholder="Kosongkan jika tidak ingin mengubah">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container position-fixed top-0 end-0 p-2"></div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1EaxhFilcZz37g26ymtK9CYt7fKKnCRw",
+            authDomain: "aplikasi-medis-block-cain.firebaseapp.com",
+            projectId: "aplikasi-medis-block-cain",
+            storageBucket: "aplikasi-medis-block-cain.appspot.com",
+            messagingSenderId: "244107019673",
+            appId: "1:244107019673:web:70afe77184d7ea42e73f08",
+            measurementId: "G-EL99THSXXN"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // QR Scanner variables
+        let html5QrCode = null;
+        let cameraStream = null;
+        let flashActive = false;
+        let isScanning = false;
+        let scanSound = null;
+        
+        // Chart instance
+        let dokterChart = null;
+
+        // Current user data
+        let currentUserData = null;
+
+        // Initialize blockchain
+        class Block {
+            constructor(index, timestamp, data, previousHash = '') {
+                this.index = index;
+                this.timestamp = timestamp;
+                this.data = data;
+                this.previousHash = previousHash;
+                this.hash = this.calculateHash();
+                this.nonce = 0;
+            }
+
+            calculateHash() {
+                return CryptoJS.SHA256(
+                    this.index + 
+                    this.previousHash + 
+                    this.timestamp + 
+                    JSON.stringify(this.data) + 
+                    this.nonce
+                ).toString();
+            }
+
+            mineBlock(difficulty) {
+                const startTime = new Date().getTime();
+                
+                let updateInterval;
+                
+                const miningModal = document.getElementById('miningModal');
+                const miningProgress = document.getElementById('miningProgress');
+                const miningStatus = document.getElementById('miningStatus');
+                
+                if (miningModal && miningProgress && miningStatus) {
+                    const modalInstance = new bootstrap.Modal(miningModal);
+                    modalInstance.show();
+                    
+                    updateInterval = setInterval(() => {
+                        const elapsed = (new Date().getTime() - startTime) / 1000;
+                        miningStatus.textContent = `Mencari nonce yang valid... (${this.nonce} percobaan, ${elapsed.toFixed(1)} detik)`;
+                        
+                        // Simple progress simulation (adjust 1000 and 10 for desired animation speed)
+                        const progress = Math.min(95, (this.nonce / 1000) * 10); 
+                        miningProgress.style.width = `${progress}%`;
+                    }, 100);
+                }
+                
+                while (this.hash.substring(0, difficulty) !== Array(difficulty + 1).join("0")) {
+                    this.nonce++;
+                    this.hash = this.calculateHash();
+                }
+                
+                if (updateInterval && miningModal && miningProgress && miningStatus) {
+                    clearInterval(updateInterval);
+                    miningProgress.style.width = '100%';
+                    miningStatus.textContent = 'Block berhasil ditambahkan ke blockchain!';
+                    
+                    setTimeout(() => {
+                        bootstrap.Modal.getInstance(miningModal).hide();
+                    }, 1000);
+                }
+                
+                console.log("Block mined: " + this.hash);
+            }
+        }
+
+        class Blockchain {
+            constructor() {
+                this.chain = [this.createGenesisBlock()];
+                this.difficulty = 4;
+                this.pendingRecords = [];
+                this.miningReward = 0.01;
+            }
+
+            createGenesisBlock() {
+                return new Block(0, "01/01/2023", "Genesis block", "0");
+            }
+
+            getLatestBlock() {
+                return this.chain[this.chain.length - 1];
+            }
+
+            addRecord(record) {
+                this.pendingRecords.push(record);
+            }
+
+            minePendingRecords(miningRewardAddress) {
+                let block = new Block(
+                    this.chain.length,
+                    new Date().toISOString(),
+                    this.pendingRecords,
+                    this.getLatestBlock().hash
+                );
+                
+                block.mineBlock(this.difficulty);
+                
+                this.chain.push(block);
+                
+                this.pendingRecords = [];
+                
+                console.log(`Mining reward of ${this.miningReward} sent to ${miningRewardAddress}`);
+                
+                return block;
+            }
+
+            isChainValid() {
+                for (let i = 1; i < this.chain.length; i++) {
+                    const currentBlock = this.chain[i];
+                    const previousBlock = this.chain[i - 1];
+
+                    if (currentBlock.hash !== currentBlock.calculateHash()) {
+                        return false;
+                    }
+
+                    if (currentBlock.previousHash !== previousBlock.hash) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        // Initialize blockchain
+        let medicalBlockchain = new Blockchain();
+
+        // Load blockchain from Firestore
+        function loadBlockchainFromFirestore() {
+            return db.collection('blockchain').orderBy('index').get()
+                .then(querySnapshot => {
+                    if (querySnapshot.empty) {
+                        // If blockchain collection is empty, save the genesis block
+                        return saveBlockToFirestore(medicalBlockchain.chain[0])
+                            .then(() => {
+                                console.log('Genesis block created and saved to Firestore.');
+                                return medicalBlockchain;
+                            });
+                    } else {
+                        medicalBlockchain.chain = [];
+                        querySnapshot.forEach(doc => {
+                            const blockData = doc.data();
+                            const loadedBlock = new Block(
+                                blockData.index,
+                                blockData.timestamp,
+                                blockData.data,
+                                blockData.previousHash
+                            );
+                            loadedBlock.hash = blockData.hash;
+                            loadedBlock.nonce = blockData.nonce;
+                            medicalBlockchain.chain.push(loadedBlock);
+                        });
+                        
+                        if (querySnapshot.docs.length > 0) {
+                            const lastBlock = querySnapshot.docs[querySnapshot.docs.length - 1].data();
+                            medicalBlockchain.difficulty = lastBlock.difficulty !== undefined ? lastBlock.difficulty : 4;
+                        }
+                        
+                        console.log('Blockchain loaded from Firestore:', medicalBlockchain);
+                        return medicalBlockchain;
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading blockchain:", error);
+                    showToast('Gagal memuat blockchain: ' + error.message, 'error');
+                    return medicalBlockchain;
+                });
+        }
+
+        // Save block to Firestore
+        function saveBlockToFirestore(block) {
+            return db.collection('blockchain').doc(block.index.toString()).set({
+                index: block.index,
+                timestamp: block.timestamp,
+                data: block.data,
+                previousHash: block.previousHash,
+                hash: block.hash,
+                nonce: block.nonce,
+                difficulty: medicalBlockchain.difficulty 
+            });
+        }
+
+        // Add record to blockchain
+        function addMedicalRecordToBlockchain(recordData) {
+            return new Promise((resolve, reject) => {
+                medicalBlockchain.addRecord(recordData);
+                
+                try {
+                    const newBlock = medicalBlockchain.minePendingRecords(recordData.dokter_id);
+                    
+                    saveBlockToFirestore(newBlock)
+                        .then(() => {
+                            console.log('Block saved to Firestore:', newBlock);
+                            resolve(newBlock);
+                        })
+                        .catch(error => {
+                            console.error('Error saving block to Firestore:', error);
+                            reject(error);
+                        });
+                } catch (mineError) {
+                    console.error('Error during block mining:', mineError);
+                    reject(mineError);
+                }
+            });
+        }
+
+        // Get all records for a patient
+        function getPatientRecords(patientId) {
+            const records = [];
+            
+            for (const block of medicalBlockchain.chain) {
+                if (block.data && Array.isArray(block.data)) {
+                    for (const record of block.data) {
+                        if (record.pasien_id === patientId) {
+                            records.push({
+                                ...record,
+                                blockIndex: block.index,
+                                blockTimestamp: block.timestamp,
+                                blockHash: block.hash,
+                                nonce: block.nonce 
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return records;
+        }
+
+        // Get all records created by a doctor
+        function getDoctorRecords(doctorId) {
+            const records = [];
+            
+            for (const block of medicalBlockchain.chain) {
+                if (block.data && Array.isArray(block.data)) {
+                    for (const record of block.data) {
+                        if (record.dokter_id === doctorId) {
+                            records.push({
+                                ...record,
+                                blockIndex: block.index,
+                                blockTimestamp: block.timestamp,
+                                blockHash: block.hash,
+                                nonce: block.nonce 
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return records;
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast toast-${type}`;
+            toastEl.setAttribute('role', 'alert');
+            toastEl.setAttribute('aria-live', 'assertive');
+            toastEl.setAttribute('aria-atomic', 'true');
+            
+            const headerClass = type === 'success' ? 'text-success' : 'text-danger';
+            const headerIcon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            toastEl.innerHTML = `
+                <div class="toast-header ${headerClass}">
+                    <i class="fas ${headerIcon} me-2"></i>
+                    <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+            
+            document.querySelector('.toast-container').appendChild(toastEl);
+            const toast = new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+            
+            toastEl.addEventListener('hidden.bs.toast', function() {
+                toastEl.remove();
+            });
+        }
+
+        // Initialize scan sound
+        function initScanSound() {
+            // Base64 encoded short beep sound
+            const soundData = 'data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...';
+            scanSound = new Audio();
+            scanSound.src = soundData;
+            scanSound.volume = 0.2;
+        }
+
+
+// Initialize QR Scanner
+async function initQRScanner() {
+    try {
+        const qrScannerContainer = document.getElementById('qrScanner');
+        qrScannerContainer.innerHTML = '';
+
+        // Initialize scan sound
+        if (!scanSound) {
+            initScanSound();
+        }
+
+        // Check scanner library
+        if (!window.Html5Qrcode) {
+            throw new Error('QR Scanner library tidak dimuat');
+        }
+
+        // Create scanner instance
+        html5QrCode = new Html5Qrcode("qrScanner");
+
+        // Success callback
+        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+            try {
+                if (!isScanning) return;
+
+                // Visual feedback
+                document.querySelector('.scanner-frame').classList.add('scan-success');
+                document.getElementById('statusMessage').textContent = 'Berhasil memindai!';
+                document.getElementById('statusMessage').classList.add('success');
+
+                // Play scan sound
+                if (scanSound) {
+                    scanSound.play().catch(e => console.log('Audio play error:', e));
+                }
+
+                // Process after short delay for visual feedback
+                setTimeout(() => {
+                    handleQRScan(decodedText);
+                }, 500);
+            } catch (e) {
+                console.error("Error handling QR scan:", e);
+                showToast('Gagal memproses QR code: ' + e.message, 'error');
+            }
+        };
+
+        // Scanner configuration
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            rememberLastUsedCamera: true,
+            // Removed deprecated supportedScanTypes
+            showTorchButtonIfSupported: true
+        };
+
+        // Get available cameras
+        const cameras = await Html5Qrcode.getCameras();
+        if (!cameras || cameras.length === 0) {
+            throw new Error('Tidak ada kamera yang terdeteksi');
+        }
+
+        // Camera selection logic
+        let selectedCameraId;
+        const lastCameraId = localStorage.getItem('lastUsedCameraId');
+
+        // Try to use last used camera
+        if (lastCameraId && cameras.some(cam => cam.id === lastCameraId)) {
+            selectedCameraId = lastCameraId;
+        } else {
+            // Prefer back camera
+            const backCamera = cameras.find(cam =>
+                cam.label.toLowerCase().includes('back') ||
+                cam.label.toLowerCase().includes('rear')
+            );
+            selectedCameraId = backCamera ? backCamera.id : cameras[0].id;
+        }
+
+        // Start scanner using camera ID or a direct constraint for facingMode
+        await html5QrCode.start(
+            { deviceId: { exact: selectedCameraId } }, // Use deviceId with exact constraint
+            {
+                ...config,
+                aspectRatio: 1.0
+            },
+            qrCodeSuccessCallback,
+            (errorMessage) => {
+    if (!errorMessage.includes('No multi format')) {
+        console.log("QR scanner error:", errorMessage);
+        // Update the status message for the user:
+        updateStatus('Tidak dapat mendeteksi QR Code. Pastikan pencahayaan cukup dan kode tidak buram.', 'error');
+    }
+}
+        ).then(() => {
+            // Save camera preference
+            localStorage.setItem('lastUsedCameraId', selectedCameraId);
+        });
+
+        console.log('QR Scanner started');
+        document.getElementById('qrScanner').style.display = 'block';
+        document.getElementById('scannerLoader').style.display = 'none';
+        updateStatus('Arahkan kamera ke QR Code pasien');
+
+        // Get video stream for flash control
+        const videoElement = document.querySelector('#qrScanner video');
+        if (videoElement) {
+            cameraStream = videoElement.srcObject;
+
+            // Try to enable auto-focus
+            const track = cameraStream.getVideoTracks()[0];
+            if (track && track.getCapabilities && track.getCapabilities().focusMode) {
+                try {
+                    track.applyConstraints({
+                        advanced: [{ focusMode: 'continuous' }]
+                    });
+                } catch (e) {
+                    console.log('Auto-focus not supported:', e);
+                }
+            }
+        }
+
+        isScanning = true;
+
+    } catch (error) {
+        console.error("QR Scanner init error:", error);
+        handleCameraError(error.message);
+        // Show manual input option
+        document.querySelector('.manual-input').style.display = 'block';
+    }
+}
+
+        // Stop camera and clean up
+        function stopCamera() {
+            if (!isScanning) return;
+            isScanning = false;
+            
+            // Reset UI
+            const scannerFrame = document.querySelector('.scanner-frame');
+            if (scannerFrame) {
+                scannerFrame.classList.remove('scan-success');
+            }
+            
+            const statusMessage = document.getElementById('statusMessage');
+            if (statusMessage) {
+                statusMessage.classList.remove('success', 'error');
+            }
+            
+            // Stop QR scanner
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    console.log("QR Scanner stopped");
+                    html5QrCode.clear();
+                }).catch(err => {
+                    console.error("Failed to stop QR scanner", err);
+                });
+            }
+            
+            // Stop camera streams
+            const videoElements = document.querySelectorAll('video');
+            videoElements.forEach(video => {
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            });
+            
+            // Reset flash
+            flashActive = false;
+            const flashToggle = document.getElementById('flashToggle');
+            if (flashToggle) {
+                flashToggle.classList.remove('active');
+            }
+        }
+
+        // Toggle flash
+        function toggleFlash() {
+            if (!cameraStream) return;
+            
+            const flashToggle = document.getElementById('flashToggle');
+            flashActive = !flashActive;
+            
+            try {
+                const track = cameraStream.getVideoTracks()[0];
+                if (!track || !track.getCapabilities) return;
+                
+                const capabilities = track.getCapabilities();
+                if (!capabilities.torch) {
+                    showToast('Flash tidak didukung di perangkat ini', 'error');
+                    return;
+                }
+                
+                track.applyConstraints({
+                    advanced: [{torch: flashActive}]
+                }).then(() => {
+                    flashToggle.classList.toggle('active', flashActive);
+                }).catch(e => {
+                    console.error('Error toggling flash:', e);
+                    showToast('Gagal mengaktifkan flash', 'error');
+                });
+            } catch (e) {
+                console.error('Error toggling flash:', e);
+                showToast('Gagal mengaktifkan flash', 'error');
+            }
+        }
+
+        // Update status message
+        function updateStatus(message, type = '') {
+            const statusElement = document.getElementById('statusMessage');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = 'status-message';
+                if (type) {
+                    statusElement.classList.add(type);
+                }
+            }
+        }
+
+        // Handle camera errors
+        function handleCameraError(errorMessage) {
+            let userMessage = 'Kamera tidak tersedia';
+            
+            if (errorMessage.includes('NotAllowedError')) {
+                userMessage = 'Izin kamera ditolak. Silakan berikan izin untuk mengakses kamera.';
+            } else if (errorMessage.includes('NotFoundError') || errorMessage.includes('OverconstrainedError')) {
+                userMessage = 'Kamera tidak ditemukan';
+            } else if (errorMessage.includes('Source width is 0')) {
+                userMessage = 'Kamera tidak dapat diakses';
+            }
+            
+            updateStatus(userMessage, 'error');
+            showToast(userMessage, 'error');
+        }
+
+        // Handle QR scan result
+        function handleQRScan(result) {
+            try {
+                console.log("QR Scan Result:", result);
+                
+                if (!result) {
+                    throw new Error("Hasil scan kosong");
+                }
+                
+                let qrData;
+                try {
+                    qrData = JSON.parse(result);
+                } catch (e) {
+                    // Jika bukan JSON, anggap sebagai token langsung
+                    qrData = { token: result.trim() };
+                }
+                
+                const token = qrData.token;
+                
+                if (!token || typeof token !== 'string') {
+                    throw new Error("QR code tidak mengandung token yang valid");
+                }
+                
+                if (!token.startsWith('TOK-')) {
+                    throw new Error("Format token tidak valid (harus dimulai dengan TOK-)");
+                }
+                
+                // Show results in the panel
+                document.getElementById('resultToken').textContent = token;
+                document.getElementById('resultPatientId').textContent = qrData.pasien_id || 'ID-' + token.substring(4, 8);
+                document.getElementById('resultPatientName').textContent = qrData.nama || 'Pasien';
+                
+                // Show result panel
+                document.getElementById('resultContainer').classList.add('active');
+                
+                // Pause scanner but keep the preview
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.pause();
+                }
+                
+            } catch (e) {
+                console.error("Error processing QR code:", e);
+                showToast('Gagal memproses QR code: ' + e.message, 'error');
+            }
+        }
+
+        // Close result panel and resume scanning
+        function closeResult() {
+            document.getElementById('resultContainer').classList.remove('active');
+            if (html5QrCode) {
+                html5QrCode.resume();
+            }
+            updateStatus('Arahkan kamera ke QR Code pasien');
+        }
+
+        // Continue with the scanned token
+        function continueWithToken() {
+            const token = document.getElementById('resultToken').textContent;
+            const pasienId = document.getElementById('resultPatientId').textContent;
+            const pasienName = document.getElementById('resultPatientName').textContent;
+            
+            verifyPatientToken(pasienId, token)
+                .then(pasienData => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('scanQRModal'));
+                    if (modal) modal.hide();
+                    
+                    // Set data pasien untuk form pemeriksaan
+                    document.getElementById('pasienName').value = pasienData.nama;
+                    document.getElementById('pasienDob').value = pasienData.tgl_lahir || '-';
+                    document.getElementById('pemeriksaanForm').setAttribute('data-pasien-id', pasienData.uid);
+                    
+                    document.getElementById('pemeriksaanFormContainer').style.display = 'block';
+                    
+                    showToast('Token pasien berhasil diverifikasi', 'success');
+                })
+                .catch(error => {
+                    showToast('Token tidak valid: ' + error.message, 'error');
+                });
+        }
+
+        // Token verification system
+        async function verifyPatientToken(pasienId, token) {
+            try {
+                console.log("Memverifikasi token:", token);
+                
+                if (!token.startsWith('TOK-')) {
+                    throw new Error("Format token tidak valid (harus dimulai dengan TOK-)");
+                }
+                
+                const tokensRef = db.collection('tokens');
+                const tokenQuery = await tokensRef.where('token', '==', token).limit(1).get();
+                
+                if (tokenQuery.empty) {
+                    throw new Error("Token tidak ditemukan");
+                }
+                
+                const tokenDoc = tokenQuery.docs[0];
+                const tokenData = tokenDoc.data();
+                
+                if (tokenData.used) {
+                    throw new Error("Token sudah digunakan");
+                }
+                
+                const now = new Date();
+                const expiryDate = tokenData.expiresAt.toDate();
+                if (now > expiryDate) {
+                    throw new Error("Token sudah kadaluwarsa");
+                }
+                
+                if (pasienId && tokenData.userId !== pasienId) {
+                    throw new Error("Token tidak cocok dengan pasien");
+                }
+                
+                await tokensRef.doc(tokenDoc.id).update({
+                    used: true,
+                    usedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                const userDoc = await db.collection('users').doc(tokenData.userId).get();
+                if (!userDoc.exists) {
+                    throw new Error("Data pasien tidak ditemukan");
+                }
+                
+                const patientData = userDoc.data();
+                
+                return {
+                    uid: tokenData.userId,
+                    nama: patientData.name || patientData.nama || "Pasien",
+                    email: patientData.email || "",
+                    tgl_lahir: patientData.dob && patientData.dob.toDate ? patientData.dob.toDate().toLocaleDateString('id-ID') : (patientData.dob || ""),
+                    tokenData: tokenData
+                };
+            } catch (error) {
+                console.error("Error verifying token:", error);
+                throw new Error(error.message || 'Terjadi kesalahan saat memverifikasi token');
+            }
+        }
+
+        // Verify token and load patient data
+        function verifyTokenAndLoadPatient(token) {
+            const scanModal = bootstrap.Modal.getInstance(document.getElementById('scanQRModal'));
+            if (scanModal) scanModal.hide();
+            
+            const manualModal = bootstrap.Modal.getInstance(document.getElementById('manualTokenModal'));
+            if (manualModal) manualModal.hide();
+            
+            verifyPatientToken(null, token)
+                .then(pasienData => {
+                    document.getElementById('pasienName').value = pasienData.nama;
+                    document.getElementById('pasienDob').value = pasienData.tgl_lahir || '-';
+                    document.getElementById('pemeriksaanForm').setAttribute('data-pasien-id', pasienData.uid);
+                    
+                    document.getElementById('pemeriksaanFormContainer').style.display = 'block';
+                    
+                    showToast('Token pasien berhasil diverifikasi', 'success');
+                })
+                .catch(error => {
+                    showToast('Gagal memverifikasi token: ' + error.message, 'error');
+                });
+        }
+
+        // Load user data from Firestore
+        function loadUserData(userId) {
+            return db.collection('users').doc(userId).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        return doc.data();
+                    }
+                    return null;
+                })
+                .catch(error => {
+                    console.error("Error fetching user data:", error);
+                    showToast('Gagal memuat data pengguna: ' + error.message, 'error');
+                    return null;
+                });
+        }
+
+        // Main application logic
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current date
+            const now = new Date();
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // Initialize navigation
+            setupNavigation();
+            
+            // Setup sidebar toggle
+            setupSidebarToggle();
+            
+            // Check authentication state
+            auth.onAuthStateChanged(async user => {
+                if (!user) {
+                    window.location.href = 'index.html';
+                } else {
+                    currentUserData = await loadUserData(user.uid);
+                    
+                    document.getElementById('usernameDisplay').textContent = currentUserData?.nama || "Dr. " + (user.email ? user.email.split('@')[0] : "Anonim");
+                    
+                    loadBlockchainFromFirestore().then(() => {
+                        loadDokterDashboardData();
+                    }).catch(err => {
+                        console.error("Initial blockchain load error:", err);
+                        showToast("Failed to load blockchain on startup: " + err.message, "error");
+                    });
+                }
+            });
+            
+            // Initialize pemeriksaan form
+            if (document.getElementById('pemeriksaanForm')) {
+                document.getElementById('pemeriksaanForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    simpanPemeriksaan();
+                });
+            }
+            
+            // Initialize QR scanner button
+            if (document.getElementById('scanQRBtn')) {
+                document.getElementById('scanQRBtn').addEventListener('click', function() {
+                    const modal = new bootstrap.Modal(document.getElementById('scanQRModal'));
+                    
+                    modal._element.addEventListener('shown.bs.modal', function() {
+                        // Reset UI
+                        updateStatus('Mengaktifkan kamera...');
+                        document.getElementById('scannerLoader').style.display = 'block';
+                        document.querySelector('.manual-input').style.display = 'none';
+                        document.getElementById('resultContainer').classList.remove('active');
+                        
+                        // Start QR scanner
+                        initQRScanner();
+                    }, { once: true });
+                    
+                    modal._element.addEventListener('hidden.bs.modal', function() {
+                        stopCamera();
+                    }, { once: true });
+                    
+                    modal.show();
+                });
+            }
+            
+            // Flash toggle button
+            if (document.getElementById('flashToggle')) {
+                document.getElementById('flashToggle').addEventListener('click', toggleFlash);
+            }
+            
+            // Close result button
+            if (document.getElementById('closeResult')) {
+                document.getElementById('closeResult').addEventListener('click', closeResult);
+            }
+            
+            // Continue button
+            if (document.getElementById('continueBtn')) {
+                document.getElementById('continueBtn').addEventListener('click', continueWithToken);
+            }
+            
+            // Copy token button
+            if (document.getElementById('copyTokenBtn')) {
+                document.getElementById('copyTokenBtn').addEventListener('click', function() {
+                    const token = document.getElementById('resultToken').textContent;
+                    navigator.clipboard.writeText(token).then(() => {
+                        showToast('Token berhasil disalin', 'success');
+                    });
+                });
+            }
+            
+            // Verify manual token button in scan modal
+            if (document.getElementById('verifyTokenBtn')) {
+                document.getElementById('verifyTokenBtn').addEventListener('click', function() {
+                    const token = document.getElementById('manualTokenInput').value.trim();
+                    if (token) {
+                        verifyTokenAndLoadPatient(token);
+                    } else {
+                        showToast('Masukkan token pasien', 'error');
+                    }
+                });
+            }
+            
+            // Initialize manual token button
+            if (document.getElementById('manualTokenBtn')) {
+                document.getElementById('manualTokenBtn').addEventListener('click', function() {
+                    const manualModal = new bootstrap.Modal(document.getElementById('manualTokenModal'));
+                    document.getElementById('manualTokenInput2').value = ''; 
+                    manualModal.show();
+                });
+            }
+            
+            // Initialize verify token button in manual modal
+            if (document.getElementById('verifyTokenBtn2')) {
+                document.getElementById('verifyTokenBtn2').addEventListener('click', function() {
+                    const token = document.getElementById('manualTokenInput2').value;
+                    if (token) {
+                        verifyTokenAndLoadPatient(token);
+                    } else {
+                        showToast('Masukkan token pasien', 'error');
+                    }
+                });
+            }
+            
+            // Initialize buat pemeriksaan button in pasien modal
+            if (document.getElementById('buatPemeriksaanBtn')) {
+                document.getElementById('buatPemeriksaanBtn').addEventListener('click', function() {
+                    const pasienModal = bootstrap.Modal.getInstance(document.getElementById('viewPasienModalDokter'));
+                    if (pasienModal) pasienModal.hide();
+                    
+                    document.getElementById('pemeriksaanMenu').click();
+                    
+                    const pasienId = this.getAttribute('data-pasien-id');
+                    const pasienName = document.getElementById('viewPasienNameDokter').textContent;
+                    const pasienDob = document.getElementById('viewPasienDobDokter').textContent;
+                    
+                    document.getElementById('pasienName').value = pasienName;
+                    document.getElementById('pasienDob').value = pasienDob;
+                    document.getElementById('pemeriksaanForm').setAttribute('data-pasien-id', pasienId);
+                    
+                    document.getElementById('pemeriksaanFormContainer').style.display = 'block';
+                    document.getElementById('diagnosa').focus(); 
+                });
+            }
+            
+            // Profile link
+            if (document.getElementById('profileDropdown')) {
+                document.getElementById('profileDropdown').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showProfileModal();
+                });
+            }
+            
+            // Logout link
+            if (document.getElementById('logoutMenu') || document.getElementById('logoutDropdown')) {
+                const logoutElements = [
+                    document.getElementById('logoutMenu'),
+                    document.getElementById('logoutDropdown')
+                ];
+                
+                logoutElements.forEach(element => {
+                    if (element) {
+                        element.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            auth.signOut().then(() => {
+                                window.location.href = 'index.html';
+                            }).catch(error => {
+                                console.error("Error during logout:", error);
+                                showToast("Gagal logout: " + error.message, "error");
+                            });
+                        });
+                    }
+                });
+            }
+            
+            // Profile form submission
+            if (document.getElementById('profileForm')) {
+                document.getElementById('profileForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    updateProfile();
+                });
+            }
+            
+            // Search pasien button
+            if (document.getElementById('searchPasienTableBtn')) {
+                document.getElementById('searchPasienTableBtn').addEventListener('click', function() {
+                    loadPasienDokterData(document.getElementById('searchPasienTableInput').value);
+                });
+            }
+            
+            // Search rekam medis button
+            if (document.getElementById('searchRekamMedisBtn')) {
+                document.getElementById('searchRekamMedisBtn').addEventListener('click', function() {
+                    loadRekamMedisDokterData(document.getElementById('searchRekamMedisInput').value);
+                });
+            }
+        });
+
+        function setupSidebarToggle() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                    sidebarOverlay.classList.toggle('active');
+                    
+                    if (sidebar.classList.contains('active')) {
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+            
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('active');
+                    this.classList.remove('active');
+                    document.body.style.overflow = '';
+                });
+            }
+        }
+
+        function setupNavigation() {
+            const sections = {
+                'dashboardMenu': 'dashboardSection',
+                'pemeriksaanMenu': 'pemeriksaanSection',
+                'pasienMenu': 'pasienSection',
+                'rekamMedisMenu': 'rekamMedisSection'
+            };
+            
+            for (const [menuId, sectionId] of Object.entries(sections)) {
+                const menuElement = document.getElementById(menuId);
+                if (menuElement) {
+                    menuElement.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        Object.values(sections).forEach(id => {
+                            document.getElementById(id).style.display = 'none';
+                        });
+                        
+                        if (sectionId !== 'dashboardSection' && dokterChart) {
+                            dokterChart.destroy();
+                            dokterChart = null;
+                        }
+                        
+                        document.getElementById(sectionId).style.display = 'block';
+                        
+                        document.querySelectorAll('.menu-item').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                        
+                        document.querySelector('.navbar-brand').textContent = this.querySelector('span').textContent;
+                        
+                        if (sectionId === 'pasienSection') {
+                            loadPasienDokterData();
+                        } else if (sectionId === 'rekamMedisSection') {
+                            loadRekamMedisDokterData();
+                        } else if (sectionId === 'dashboardSection') {
+                            loadDokterDashboardData();
+                        }
+                        
+                        if (window.innerWidth < 992) {
+                            document.getElementById('sidebar').classList.remove('active');
+                            document.getElementById('sidebarOverlay').classList.remove('active');
+                            document.body.style.overflow = '';
+                        }
+                    });
+                }
+            }
+            
+            const backButtons = {
+                'backToDashboardFromPemeriksaanBtn': 'dashboardMenu',
+                'backToDashboardFromPasienBtn': 'dashboardMenu',
+                'backToDashboardFromRekamMedisBtn': 'dashboardMenu'
+            };
+            
+            for (const [buttonId, menuId] of Object.entries(backButtons)) {
+                const buttonElement = document.getElementById(buttonId);
+                if (buttonElement) {
+                    buttonElement.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        document.getElementById(menuId).click();
+                    });
+                }
+            }
+        }
+
+        async function loadDokterDashboardData() {
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                showToast('Anda harus login untuk mengakses dashboard', 'error');
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            await loadBlockchainFromFirestore(); 
+
+            const allRecords = getDoctorRecords(currentUser.uid);
+            
+            let todayPatients = new Set();
+            allRecords.forEach(record => {
+                const recordDate = new Date(record.tanggal).toISOString().split('T')[0];
+                if (recordDate === today) {
+                    todayPatients.add(record.pasien_id);
+                }
+            });
+            
+            document.getElementById('pasienHariIni').textContent = todayPatients.size;
+            document.getElementById('totalPasienDokter').textContent = new Set(allRecords.map(r => r.pasien_id)).size;
+            document.getElementById('totalRekamMedisDokter').textContent = allRecords.length;
+            document.getElementById('totalBlocksDokter').textContent = medicalBlockchain.chain.length;
+            
+            loadJadwalHariIni(currentUser.uid);
+            
+            loadDokterChartData(currentUser.uid);
+        }
+
+        async function loadJadwalHariIni(dokterId) {
+            const today = new Date().toISOString().split('T')[0];
+            const jadwalTableBody = document.getElementById('jadwalTableBody');
+            jadwalTableBody.innerHTML = '<tr><td colspan="4" class="text-center">Memuat data...</td></tr>';
+            
+            await loadBlockchainFromFirestore(); 
+
+            const allRecords = getDoctorRecords(dokterId);
+            const todayRecords = allRecords.filter(record => {
+                const recordDate = new Date(record.tanggal).toISOString().split('T')[0];
+                return recordDate === today;
+            });
+            
+            if (todayRecords.length === 0) {
+                jadwalTableBody.innerHTML = '<tr><td colspan="4" class="text-center">Tidak ada jadwal hari ini</td></tr>';
+                return;
+            }
+            
+            jadwalTableBody.innerHTML = ''; 
+            todayRecords.forEach(record => {
+                const pasienName = record.pasien_nama || 'Pasien';
+                
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${new Date(record.tanggal).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</td>
+                    <td>${escapeHtml(pasienName)}</td>
+                    <td><span class="badge bg-success">Selesai</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary view-rekam-medis-btn" 
+                            data-diagnosa="${escapeHtml(record.diagnosa)}" 
+                            data-tindakan="${escapeHtml(record.tindakan)}" 
+                            data-catatan="${escapeHtml(record.catatan || '')}" 
+                            data-tanggal="${record.tanggal}" 
+                            data-pasien="${escapeHtml(pasienName)}"
+                            data-hash="${record.blockHash}"
+                            data-timestamp="${record.blockTimestamp}"
+                            data-nonce="${record.nonce || 0}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                
+                jadwalTableBody.appendChild(row);
+                
+                row.querySelector('.view-rekam-medis-btn').addEventListener('click', function() {
+                    document.getElementById('rekamMedisTanggalDokter').textContent = new Date(this.getAttribute('data-tanggal')).toLocaleString('id-ID');
+                    document.getElementById('rekamMedisPasienDokter').textContent = this.getAttribute('data-pasien');
+                    document.getElementById('rekamMedisDiagnosaDokter').textContent = this.getAttribute('data-diagnosa');
+                    document.getElementById('rekamMedisTindakanDokter').textContent = this.getAttribute('data-tindakan');
+                    document.getElementById('rekamMedisCatatanDokter').textContent = this.getAttribute('data-catatan') || '-';
+                    document.getElementById('rekamMedisHashDokter').textContent = this.getAttribute('data-hash');
+                    document.getElementById('rekamMedisBlockTimeDokter').textContent = new Date(this.getAttribute('data-timestamp')).toLocaleString('id-ID');
+                    document.getElementById('rekamMedisNonceDokter').textContent = this.getAttribute('data-nonce');
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('viewRekamMedisModalDokter'));
+                    modal.show();
+                });
+            });
+        }
+
+        function loadDokterChartData(dokterId) {
+            const ctx = document.getElementById('dokterChart').getContext('2d');
+            const allRecords = getDoctorRecords(dokterId);
+            
+            if (dokterChart) {
+                dokterChart.destroy();
+                dokterChart = null;
+            }
+            
+            const monthlyData = {};
+            allRecords.forEach(record => {
+                const date = new Date(record.tanggal);
+                const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = 0;
+                }
+                monthlyData[monthYear]++;
+            });
+            
+            const labels = Object.keys(monthlyData).sort();
+            const data = labels.map(label => monthlyData[label]);
+            
+            dokterChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Pemeriksaan',
+                        data: data,
+                        backgroundColor: 'rgba(63, 81, 181, 0.5)',
+                        borderColor: 'rgba(63, 81, 181, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Pemeriksaan: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            precision: 0
+                        }
+                    }
+                }
+            });
+        }
+
+        async function simpanPemeriksaan() {
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                showToast('Anda harus login untuk melakukan pemeriksaan', 'error');
+                return;
+            }
+            
+            const pasienId = document.getElementById('pemeriksaanForm').getAttribute('data-pasien-id');
+            if (!pasienId) {
+                showToast('Pasien tidak valid. Harap scan QR atau input token pasien terlebih dahulu.', 'error');
+                return;
+            }
+            
+            const diagnosa = document.getElementById('diagnosa').value.trim();
+            const tindakan = document.getElementById('tindakan').value.trim();
+            const catatan = document.getElementById('catatan').value.trim();
+            
+            if (!diagnosa || !tindakan) {
+                showToast('Diagnosa dan tindakan harus diisi', 'error');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('simpanPemeriksaanBtn');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+            submitBtn.disabled = true;
+            
+            const rekamMedis = {
+                pasien_id: pasienId,
+                pasien_nama: document.getElementById('pasienName').value,
+                dokter_id: currentUser.uid,
+                dokter_nama: currentUserData?.nama || "Dr. Smith",
+                dokter_spesialis: currentUserData?.spesialisasi || "Umum",
+                tanggal: new Date().toISOString(),
+                diagnosa: diagnosa,
+                tindakan: tindakan,
+                catatan: catatan || '',
+            };
+            
+            try {
+                const block = await addMedicalRecordToBlockchain(rekamMedis);
+                showToast('Pemeriksaan berhasil disimpan ke blockchain!', 'success');
+                
+                document.getElementById('diagnosa').value = '';
+                document.getElementById('tindakan').value = '';
+                document.getElementById('catatan').value = '';
+                document.getElementById('pasienName').value = '';
+                document.getElementById('pasienDob').value = '';
+                document.getElementById('pemeriksaanForm').removeAttribute('data-pasien-id'); 
+                document.getElementById('pemeriksaanFormContainer').style.display = 'none';
+                
+                loadDokterDashboardData();
+                loadRekamMedisDokterData();
+            } catch (error) {
+                console.error("Error saving pemeriksaan:", error);
+                showToast('Gagal menyimpan pemeriksaan: ' + error.message, 'error');
+            } finally {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function loadPasienDokterData(searchTerm = '') {
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                showToast('Anda harus login untuk melihat data pasien', 'error');
+                return;
+            }
+            
+            const tableBody = document.getElementById('pasienDokterTableBody');
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat data pasien...</td></tr>';
+            
+            await loadBlockchainFromFirestore(); 
+
+            const allRecords = getDoctorRecords(currentUser.uid);
+            const patientIds = [...new Set(allRecords.map(r => r.pasien_id))];
+            
+            if (patientIds.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada pasien</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = ''; 
+
+            let patientsProcessed = 0;
+            const totalPatients = patientIds.length;
+            let patientsFound = 0;
+
+            for (const pasienId of patientIds) {
+                try {
+                    const userDoc = await db.collection('users').doc(pasienId).get();
+                    
+                    if (!userDoc.exists) {
+                        console.warn(`Patient data not found for ID: ${pasienId}`);
+                        patientsProcessed++;
+                        continue;
+                    }
+                    
+                    const pasien = userDoc.data();
+                    
+                    const patientRecords = allRecords.filter(r => r.pasien_id === pasienId);
+                    const lastRecord = patientRecords.reduce((latest, current) => {
+                        return new Date(current.tanggal) > new Date(latest.tanggal) ? current : latest;
+                    }, patientRecords[0]);
+                    
+                    const patientName = pasien.nama || 'Pasien (ID: ' + pasienId.substring(0, 5) + '...)';
+                    const patientEmail = pasien.email || '-';
+                    // Safely access toDate() for Firebase Timestamp objects
+                    const patientDob = pasien.tgl_lahir && pasien.tgl_lahir.toDate ? pasien.tgl_lahir.toDate().toLocaleDateString('id-ID') : (pasien.tgl_lahir || "-");
+                    const lastExamDate = lastRecord ? new Date(lastRecord.tanggal).toLocaleDateString('id-ID') : '-';
+
+                    if (searchTerm && !patientName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                        !patientEmail.toLowerCase().includes(searchTerm.toLowerCase())) {
+                        patientsProcessed++;
+                        continue;
+                    }
+                    
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${escapeHtml(patientName)}</td>
+                        <td>${escapeHtml(patientEmail)}</td>
+                        <td>${escapeHtml(patientDob)}</td>
+                        <td>${escapeHtml(lastExamDate)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-pasien-btn" data-id="${pasienId}">
+                                <i class="fas fa-eye"></i> Lihat
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                    row.querySelector('.view-pasien-btn').addEventListener('click', function() {
+                        viewPasienDetailsDokter(pasienId);
+                    });
+                    patientsProcessed++;
+                    patientsFound++;
+
+                } catch (error) {
+                    console.error(`Error loading patient data for ${pasienId}:`, error);
+                    showToast(`Gagal memuat data pasien untuk ID ${pasienId.substring(0, 5)}...: ${error.message}`, 'error');
+                    patientsProcessed++;
+                }
+            }
+
+            if (patientsProcessed === totalPatients && patientsFound === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak ada pasien yang cocok dengan pencarian Anda.</td></tr>';
+            }
+        }
+
+        async function viewPasienDetailsDokter(pasienId) {
+            try {
+                const userDoc = await db.collection('users').doc(pasienId).get();
+                if (!userDoc.exists) {
+                    throw new Error("Data pasien tidak ditemukan");
+                }
+                
+                const pasien = userDoc.data();
+                
+                document.getElementById('viewPasienNameDokter').textContent = pasien.nama || "Pasien";
+                document.getElementById('viewPasienEmailDokter').textContent = pasien.email || "-";
+                // Safely access toDate()
+                document.getElementById('viewPasienDobDokter').textContent = pasien.tgl_lahir && pasien.tgl_lahir.toDate ? pasien.tgl_lahir.toDate().toLocaleDateString('id-ID') : (pasien.tgl_lahir || "-");
+                
+                const buatPemeriksaanBtn = document.getElementById('buatPemeriksaanBtn');
+                buatPemeriksaanBtn.setAttribute('data-pasien-id', pasienId);
+                
+                const currentUser = auth.currentUser;
+                await loadBlockchainFromFirestore(); 
+
+                const allRecords = getDoctorRecords(currentUser.uid);
+                const patientRecords = allRecords.filter(r => r.pasien_id === pasienId);
+                
+                const recordsBody = document.getElementById('pasienRekamMedisBodyDokter');
+                recordsBody.innerHTML = '';
+                
+                if (patientRecords.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="4" class="text-center">Belum ada rekam medis</td>';
+                    recordsBody.appendChild(row);
+                    return;
+                }
+                
+                patientRecords.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)); 
+                patientRecords.forEach(record => {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${new Date(record.tanggal).toLocaleDateString('id-ID')}</td>
+                        <td>${escapeHtml(record.diagnosa.substring(0, 50))}${record.diagnosa.length > 50 ? '...' : ''}</td>
+                        <td>${escapeHtml(record.tindakan.substring(0, 50))}${record.tindakan.length > 50 ? '...' : ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary view-rekam-medis-btn" 
+                                data-diagnosa="${escapeHtml(record.diagnosa)}" 
+                                data-tindakan="${escapeHtml(record.tindakan)}" 
+                                data-catatan="${escapeHtml(record.catatan || '')}" 
+                                data-tanggal="${record.tanggal}" 
+                                data-pasien="${escapeHtml(pasien.nama || 'Pasien')}"
+                                data-hash="${record.blockHash}"
+                                data-timestamp="${record.blockTimestamp}"
+                                data-nonce="${record.nonce || 0}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    recordsBody.appendChild(row);
+                    
+                    row.querySelector('.view-rekam-medis-btn').addEventListener('click', function() {
+                        document.getElementById('rekamMedisTanggalDokter').textContent = new Date(this.getAttribute('data-tanggal')).toLocaleString('id-ID');
+                        document.getElementById('rekamMedisPasienDokter').textContent = this.getAttribute('data-pasien');
+                        document.getElementById('rekamMedisDiagnosaDokter').textContent = this.getAttribute('data-diagnosa');
+                        document.getElementById('rekamMedisTindakanDokter').textContent = this.getAttribute('data-tindakan');
+                        document.getElementById('rekamMedisCatatanDokter').textContent = this.getAttribute('data-catatan') || '-';
+                        document.getElementById('rekamMedisHashDokter').textContent = this.getAttribute('data-hash');
+                        document.getElementById('rekamMedisBlockTimeDokter').textContent = new Date(this.getAttribute('data-timestamp')).toLocaleString('id-ID');
+                        document.getElementById('rekamMedisNonceDokter').textContent = this.getAttribute('data-nonce');
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('viewRekamMedisModalDokter'));
+                        modal.show();
+                    });
+                });
+                
+                const modal = new bootstrap.Modal(document.getElementById('viewPasienModalDokter'));
+                modal.show();
+            } catch (error) {
+                showToast('Gagal memuat data pasien: ' + error.message, 'error');
+                console.error('Error in viewPasienDetailsDokter:', error);
+            }
+        }
+
+        async function loadRekamMedisDokterData(searchTerm = '') {
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                showToast('Anda harus login untuk melihat rekam medis', 'error');
+                return;
+            }
+            
+            const tableBody = document.getElementById('rekamMedisTableBody');
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat rekam medis...</td></tr>';
+            
+            await loadBlockchainFromFirestore(); 
+
+            const allRecords = getDoctorRecords(currentUser.uid);
+            
+            if (allRecords.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Belum ada rekam medis</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = ''; 
+
+            const filteredRecords = allRecords.filter(record => {
+                if (!searchTerm) return true;
+                const lowerCaseSearchTerm = searchTerm.toLowerCase();
+                return (
+                    (record.pasien_nama && record.pasien_nama.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (record.diagnosa && record.diagnosa.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (record.tindakan && record.tindakan.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (record.blockHash && record.blockHash.toLowerCase().includes(lowerCaseSearchTerm)) ||
+                    (record.tanggal && new Date(record.tanggal).toLocaleDateString('id-ID').toLowerCase().includes(lowerCaseSearchTerm))
+                );
+            });
+
+            if (filteredRecords.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center">Tidak ada rekam medis yang cocok dengan pencarian Anda.</td></tr>';
+                return;
+            }
+
+            filteredRecords.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)); 
+            
+            filteredRecords.forEach(record => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${new Date(record.tanggal).toLocaleDateString('id-ID')}</td>
+                    <td>${escapeHtml(record.pasien_nama)}</td>
+                    <td>${escapeHtml(record.diagnosa.substring(0, 50))}${record.diagnosa.length > 50 ? '...' : ''}</td>
+                    <td class="text-truncate" style="max-width: 150px;">${escapeHtml(record.blockHash.substring(0, 20))}...</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary view-rekam-medis-btn" 
+                            data-diagnosa="${escapeHtml(record.diagnosa)}" 
+                            data-tindakan="${escapeHtml(record.tindakan)}" 
+                            data-catatan="${escapeHtml(record.catatan || '')}" 
+                            data-tanggal="${record.tanggal}" 
+                            data-pasien="${escapeHtml(record.pasien_nama)}"
+                            data-hash="${record.blockHash}"
+                            data-timestamp="${record.blockTimestamp}"
+                            data-nonce="${record.nonce || 0}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+                
+                row.querySelector('.view-rekam-medis-btn').addEventListener('click', function() {
+                    document.getElementById('rekamMedisTanggalDokter').textContent = new Date(this.getAttribute('data-tanggal')).toLocaleString('id-ID');
+                    document.getElementById('rekamMedisPasienDokter').textContent = this.getAttribute('data-pasien');
+                    document.getElementById('rekamMedisDiagnosaDokter').textContent = this.getAttribute('data-diagnosa');
+                    document.getElementById('rekamMedisTindakanDokter').textContent = this.getAttribute('data-tindakan');
+                    document.getElementById('rekamMedisCatatanDokter').textContent = this.getAttribute('data-catatan') || '-';
+                    document.getElementById('rekamMedisHashDokter').textContent = this.getAttribute('data-hash');
+                    document.getElementById('rekamMedisBlockTimeDokter').textContent = new Date(this.getAttribute('data-timestamp')).toLocaleString('id-ID');
+                    document.getElementById('rekamMedisNonceDokter').textContent = this.getAttribute('data-nonce');
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('viewRekamMedisModalDokter'));
+                    modal.show();
+                });
+            });
+        }
+
+        function showProfileModal() {
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                showToast('Anda tidak login.', 'error');
+                return;
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+            
+            document.getElementById('profileName').value = currentUserData?.nama || "Dr. Anonim";
+            document.getElementById('profileEmail').value = currentUser.email || "email@example.com";
+            document.getElementById('profileSpesialis').value = currentUserData?.spesialisasi || "Umum";
+            document.getElementById('profilePassword').value = ''; 
+            document.getElementById('profileConfirmPassword').value = ''; 
+            
+            modal.show();
+        }
+
+        async function updateProfile() {
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                showToast('Anda harus login untuk memperbarui profil', 'error');
+                return;
+            }
+            
+            const name = document.getElementById('profileName').value.trim();
+            const spesialis = document.getElementById('profileSpesialis').value.trim();
+            const newPassword = document.getElementById('profilePassword').value;
+            const confirmPassword = document.getElementById('profileConfirmPassword').value;
+            
+            if (!name) {
+                showToast('Nama lengkap harus diisi.', 'error');
+                return;
+            }
+
+            if (newPassword && newPassword.length < 6) {
+                showToast('Password baru harus minimal 6 karakter.', 'error');
+                return;
+            }
+            
+            if (newPassword && newPassword !== confirmPassword) {
+                showToast('Password baru tidak cocok dengan konfirmasi password!', 'error');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('profileForm').querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...';
+            submitBtn.disabled = true;
+            
+            const updateData = {
+                nama: name,
+                spesialisasi: spesialis,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+            };
+            
+            try {
+                await db.collection('users').doc(currentUser.uid).update(updateData);
+                currentUserData = {
+                    ...currentUserData,
+                    ...updateData
+                };
+                
+                document.getElementById('usernameDisplay').textContent = name;
+                
+                if (newPassword) {
+                    await currentUser.updatePassword(newPassword);
+                }
+                
+                showToast('Profil berhasil diperbarui!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+            } catch (error) {
+                console.error("Error updating profile:", error);
+                let errorMessage = 'Gagal memperbarui profil.';
+                if (error.code === 'auth/requires-recent-login') {
+                    errorMessage += ' Mohon login kembali untuk mengubah password.';
+                } else {
+                    errorMessage += ' ' + error.message;
+                }
+                showToast(errorMessage, 'error');
+            } finally {
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Helper function to escape HTML for display
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>

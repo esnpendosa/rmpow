@@ -1,0 +1,705 @@
+<!-- /**
+ * @license
+ * APLIKASI REKAM MEDIS BERBASIS BLOCKCHAIN dengan ALGORITMA KONSENSUS PROOF-of-WORK
+ * Copyright (c) 2025 Muhammad As'ad Muhibbin Akbar
+ * Licensed under the MIT License.
+ * See LICENSE file for details.
+ * See LICENSE file for details.
+ */ -->
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MedicalRecord - QR Scanner Otomatis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.4/html5-qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #4285F4;
+            --primary-dark: #3367D6;
+            --danger: #EA4335;
+            --success: #34A853;
+            --warning: #FBBC05;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #202124;
+        }
+        
+        .scanner-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .scanner-header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            z-index: 10;
+            text-align: center;
+        }
+        
+        .scanner-header h3 {
+            font-weight: 500;
+            color: var(--primary);
+            margin: 0;
+        }
+        
+        #scanner-viewport {
+            flex: 1;
+            position: relative;
+            background: black;
+            overflow: hidden;
+        }
+        
+        #qrScanner {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .scanner-frame {
+            width: 70%;
+            max-width: 300px;
+            aspect-ratio: 1;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.7);
+        }
+        
+        .scanner-guide {
+            color: white;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            padding: 0 15px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .scanner-footer {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -1px 2px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .flash-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            color: #5f6368;
+            font-size: 1.5rem;
+        }
+        
+        .flash-toggle:active {
+            background: #f1f3f4;
+        }
+        
+        .flash-toggle.active {
+            color: var(--warning);
+        }
+        
+        .result-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 24px 24px 0 0;
+            padding: 25px 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            transform: translateY(100%);
+            transition: transform 0.4s ease-out;
+            z-index: 100;
+        }
+        
+        .result-container.active {
+            transform: translateY(0);
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-header h5 {
+            margin: 0;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .close-result {
+            background: none;
+            border: none;
+            color: #5f6368;
+            font-size: 1.4rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .close-result:active {
+            background: #f8f9fa;
+        }
+        
+        .token-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .token-info-item {
+            display: flex;
+        }
+        
+        .token-info-item strong {
+            width: 110px;
+            color: #5f6368;
+            font-weight: 500;
+        }
+        
+        .token-info-item span {
+            flex: 1;
+            color: #202124;
+            font-weight: 500;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            font-size: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-btn.outline {
+            background: white;
+            border: 1px solid #dadce0;
+            color: #202124;
+        }
+        
+        .action-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        .status-message {
+            display: inline-block;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            backdrop-filter: blur(4px);
+            max-width: 80%;
+        }
+        
+        .scanner-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            color: white;
+            font-size: 3rem;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .manual-input {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .form-control {
+            flex: 1;
+            padding: 14px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(66,133,244,0.2);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-weight: 500;
+        }
+        
+        .info-text {
+            text-align: center;
+            color: #5f6368;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            padding: 0 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .scanner-container {
+                max-width: 500px;
+                margin: 20px auto;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                min-height: 80vh;
+            }
+            
+            .result-container {
+                max-width: 500px;
+                margin: 0 auto;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                transform: translateY(100%);
+                left: 50%;
+                transform: translate(-50%, 100%);
+                width: 90%;
+            }
+            
+            .result-container.active {
+                transform: translate(-50%, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanner-container">
+        <div class="scanner-header">
+            <h3><i class="fas fa-qrcode"></i> Scanner Rekam Medis</h3>
+        </div>
+        
+        <div id="scanner-viewport">
+            <div class="scanner-loader">
+                <i class="fas fa-camera"></i>
+            </div>
+            
+            <div class="status-indicator">
+                <div class="status-message" id="statusMessage">Mengaktifkan kamera...</div>
+            </div>
+            
+            <div id="qrScanner"></div>
+            
+            <div class="scanner-overlay">
+                <div class="scanner-frame"></div>
+                <div class="scanner-guide">Arahkan kamera ke QR Code pasien</div>
+            </div>
+        </div>
+        
+        <div class="scanner-footer">
+            <button class="flash-toggle" id="flashToggle">
+                <i class="fas fa-bolt"></i>
+            </button>
+            <p>Pindai kode QR untuk mengakses rekam medis pasien</p>
+        </div>
+    </div>
+    
+    <div class="result-container" id="resultContainer">
+        <div class="result-header">
+            <h5><i class="fas fa-user-injured me-2"></i> Data Pasien</h5>
+            <button class="close-result" id="closeResult">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="token-info">
+            <div class="token-info-item">
+                <strong>Token:</strong>
+                <span id="resultToken">-</span>
+            </div>
+            <div class="token-info-item">
+                <strong>ID Pasien:</strong>
+                <span id="resultPatientId">-</span>
+            </div>
+            <div class="token-info-item">
+                <strong>Nama:</strong>
+                <span id="resultPatientName">-</span>
+            </div>
+            <div class="token-info-item">
+                <strong>Layanan:</strong>
+                <span id="resultService">-</span>
+            </div>
+        </div>
+        
+        <div class="result-actions">
+            <button class="action-btn outline" id="copyTokenBtn">
+                <i class="fas fa-copy"></i> Salin
+            </button>
+            <button class="action-btn primary" id="viewRecordBtn">
+                <i class="fas fa-file-medical"></i> Lihat Rekam Medis
+            </button>
+        </div>
+    </div>
+    
+    <div class="manual-input">
+        <p class="text-center">Atau masukkan token secara manual</p>
+        <div class="input-group">
+            <input type="text" class="form-control" id="manualTokenInput" placeholder="Masukkan token pasien">
+            <button class="btn-primary" id="verifyTokenBtn">
+                <i class="fas fa-check"></i>
+            </button>
+        </div>
+        <p class="info-text">Token diberikan oleh pasien untuk mengakses rekam medis. Format token biasanya dimulai dengan "TOK-".</p>
+    </div>
+
+    <script>
+        // Global variables
+        let html5QrCode = null;
+        let cameraStream = null;
+        let flashActive = false;
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize buttons
+            document.getElementById('flashToggle').addEventListener('click', toggleFlash);
+            document.getElementById('verifyTokenBtn').addEventListener('click', verifyManualToken);
+            document.getElementById('closeResult').addEventListener('click', closeResult);
+            document.getElementById('viewRecordBtn').addEventListener('click', viewMedicalRecord);
+            document.getElementById('copyTokenBtn').addEventListener('click', copyToken);
+            
+            // Start camera automatically
+            startCamera();
+        });
+        
+        // Start camera automatically
+        async function startCamera() {
+            updateStatus('Mengaktifkan kamera...');
+            
+            try {
+                // Check if library is loaded
+                if (!window.Html5Qrcode) {
+                    throw new Error('QR Scanner library tidak dimuat');
+                }
+                
+                // Create scanner instance
+                html5QrCode = new Html5Qrcode("qrScanner");
+                
+                // Get available cameras
+                const devices = await Html5Qrcode.getCameras();
+                
+                if (devices && devices.length) {
+                    // Try to use back camera first
+                    const backCamera = devices.find(d => d.label.toLowerCase().includes('back'));
+                    const cameraId = backCamera ? backCamera.id : devices[0].id;
+                    
+                    // Start scanner
+                    await html5QrCode.start(
+                        cameraId,
+                        {
+                            fps: 15,
+                            qrbox: 250,
+                            aspectRatio: 1.0
+                        },
+                        qrCodeSuccessCallback,
+                        qrCodeErrorCallback
+                    );
+                    
+                    console.log('QR Scanner started successfully');
+                    updateStatus('Arahkan ke QR Code');
+                    
+                    // Get the video element
+                    const videoElement = document.querySelector('#qrScanner video');
+                    if (videoElement) {
+                        cameraStream = videoElement.srcObject;
+                    }
+                } else {
+                    throw new Error('Tidak ada kamera yang terdeteksi');
+                }
+            } catch (e) {
+                console.error("QR Scanner init error:", e);
+                handleCameraError(e.message);
+            }
+        }
+        
+        // QR code success callback
+        function qrCodeSuccessCallback(decodedText, decodedResult) {
+            console.log("QR Scan Result:", decodedText);
+            handleQRScan(decodedText);
+        }
+        
+        // QR code error callback
+        function qrCodeErrorCallback(errorMessage) {
+            // Handle non-critical errors without showing to user
+            if (!errorMessage.includes('No multi format') && 
+                !errorMessage.includes('NotFoundException') &&
+                !errorMessage.includes('NotReadableError')) {
+                console.log("QR Code scan error", errorMessage);
+            }
+        }
+        
+        // Handle QR scan result
+        function handleQRScan(result) {
+            try {
+                if (!result) {
+                    throw new Error("Hasil scan kosong");
+                }
+                
+                let qrData;
+                try {
+                    qrData = JSON.parse(result);
+                } catch (e) {
+                    // If not JSON, assume it's a direct token
+                    qrData = { token: result.trim() };
+                }
+                
+                const token = qrData.token;
+                const patientId = qrData.pasien_id || 'PAT-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+                const patientName = qrData.nama || ['Ahmad', 'Budi', 'Citra', 'Dewi', 'Eka'][Math.floor(Math.random() * 5)];
+                const service = qrData.layanan || ['Umum', 'Spesialis', 'Gigi', 'Mata', 'Kandungan'][Math.floor(Math.random() * 5)];
+                
+                if (!token || typeof token !== 'string') {
+                    throw new Error("QR code tidak mengandung token yang valid");
+                }
+                
+                if (!token.startsWith('TOK-')) {
+                    throw new Error("Format token tidak valid");
+                }
+                
+                // Show results
+                document.getElementById('resultToken').textContent = token;
+                document.getElementById('resultPatientId').textContent = patientId;
+                document.getElementById('resultPatientName').textContent = patientName;
+                document.getElementById('resultService').textContent = service;
+                
+                // Show result panel
+                document.getElementById('resultContainer').classList.add('active');
+                
+                // Play success sound
+                playSuccessSound();
+                
+                // Stop scanning after success
+                stopCamera();
+
+            } catch (e) {
+                console.error("Error processing QR code:", e);
+                updateStatus('Format QR tidak valid');
+                setTimeout(() => updateStatus('Arahkan ke QR Code'), 2000);
+            }
+        }
+        
+        // Verify manual token input
+        function verifyManualToken() {
+            const token = document.getElementById('manualTokenInput').value.trim();
+            
+            if (!token) {
+                updateStatus('Masukkan token pasien');
+                setTimeout(() => updateStatus('Arahkan ke QR Code'), 2000);
+                return;
+            }
+            
+            if (!token.startsWith('TOK-')) {
+                updateStatus('Format token tidak valid');
+                setTimeout(() => updateStatus('Arahkan ke QR Code'), 2000);
+                return;
+            }
+            
+            // Generate random patient data for demo
+            const patientId = 'PAT-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+            const patientName = ['Ahmad', 'Budi', 'Citra', 'Dewi', 'Eka'][Math.floor(Math.random() * 5)];
+            const service = ['Umum', 'Spesialis', 'Gigi', 'Mata', 'Kandungan'][Math.floor(Math.random() * 5)];
+            
+            // Show results
+            document.getElementById('resultToken').textContent = token;
+            document.getElementById('resultPatientId').textContent = patientId;
+            document.getElementById('resultPatientName').textContent = patientName;
+            document.getElementById('resultService').textContent = service;
+            
+            // Show result panel
+            document.getElementById('resultContainer').classList.add('active');
+            
+            // Play success sound
+            playSuccessSound();
+            
+            // Clear input
+            document.getElementById('manualTokenInput').value = '';
+        }
+        
+        // Close result panel
+        function closeResult() {
+            document.getElementById('resultContainer').classList.remove('active');
+            startCamera(); // Restart camera
+        }
+        
+        // View medical record
+        function viewMedicalRecord() {
+            const token = document.getElementById('resultToken').textContent;
+            updateStatus(`Membuka rekam medis untuk ${token}...`);
+            
+            // Simulate loading
+            setTimeout(() => {
+                updateStatus('Rekam medis ditemukan');
+                // In real app, redirect to medical record page
+            }, 1500);
+        }
+        
+        // Copy token to clipboard
+        function copyToken() {
+            const token = document.getElementById('resultToken').textContent;
+            navigator.clipboard.writeText(token).then(() => {
+                updateStatus('Token disalin!');
+            });
+        }
+        
+        // Toggle flash
+        function toggleFlash() {
+            if (!cameraStream) return;
+            
+            const flashToggle = document.getElementById('flashToggle');
+            
+            try {
+                const track = cameraStream.getVideoTracks()[0];
+                if (!track || !track.getCapabilities) return;
+                
+                const capabilities = track.getCapabilities();
+                if (!capabilities.torch) return;
+                
+                flashActive = !flashActive;
+                
+                track.applyConstraints({
+                    advanced: [{torch: flashActive}]
+                }).then(() => {
+                    flashToggle.classList.toggle('active', flashActive);
+                });
+            } catch (e) {
+                console.error('Error toggling flash:', e);
+            }
+        }
+        
+        // Stop camera
+        function stopCamera() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    console.log("QR Scanner stopped successfully");
+                }).catch(err => {
+                    console.error("Failed to stop QR scanner", err);
+                });
+            }
+        }
+        
+        // Handle camera errors
+        function handleCameraError(errorMessage) {
+            let userMessage = 'Kamera tidak tersedia';
+            
+            if (errorMessage.includes('NotAllowedError')) {
+                userMessage = 'Izin kamera ditolak';
+            } else if (errorMessage.includes('NotFoundError') || errorMessage.includes('OverconstrainedError')) {
+                userMessage = 'Kamera tidak ditemukan';
+            } else if (errorMessage.includes('Source width is 0')) {
+                userMessage = 'Kamera tidak dapat diakses';
+            }
+            
+            updateStatus(userMessage);
+        }
+        
+        // Update status message
+        function updateStatus(message) {
+            document.getElementById('statusMessage').textContent = message;
+        }
+        
+        // Play success sound
+        function playSuccessSound() {
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = context.createOscillator();
+                const gainNode = context.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(context.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 784; // G5
+                
+                gainNode.gain.setValueAtTime(0.3, context.currentTime);
+                
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.3);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+    </script>
+</body>
+</html>
